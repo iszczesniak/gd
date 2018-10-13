@@ -1,0 +1,27 @@
+adaptive_units.o: adaptive_units.cc ../adaptive_units.hpp ../graph.hpp \
+ ../units.hpp ../cunits.hpp ../sunits.hpp ../utils.hpp \
+ ../generic_label.hpp ../utils.hpp ../graph.hpp ../standard_label.hpp
+cli_args.o: cli_args.cc ../cli_args.hpp ../connection.hpp ../graph.hpp \
+ ../units.hpp ../cunits.hpp ../sunits.hpp ../routing.hpp ../sim.hpp \
+ ../include/simulation.hpp ../include/event.hpp ../include/module.hpp \
+ ../include/module.hpp ../utils.hpp ../generic_label.hpp ../utils.hpp \
+ ../standard_label.hpp
+dijkstra.o: dijkstra.cc ../graph.hpp ../units.hpp ../cunits.hpp \
+ ../sunits.hpp ../accountant.hpp ../adaptive_units.hpp \
+ ../generic_dijkstra.hpp ../dijkstra.hpp ../generic_solution.hpp \
+ ../generic_label.hpp ../utils.hpp ../graph.hpp ../standard_label.hpp \
+ ../generic_label.hpp ../generic_label_creator.hpp ../adaptive_units.hpp \
+ ../generic_tracer.hpp ../routing.hpp ../sim.hpp \
+ ../include/simulation.hpp ../include/event.hpp ../include/module.hpp \
+ ../include/module.hpp ../utils.hpp
+graph.o: graph.cc ../generic_label.hpp ../utils.hpp ../generic_label.hpp \
+ ../graph.hpp ../units.hpp ../cunits.hpp ../sunits.hpp \
+ ../standard_label.hpp ../graph.hpp
+sample_graphs.o: sample_graphs.cc sample_graphs.hpp ../graph.hpp \
+ ../units.hpp ../cunits.hpp ../sunits.hpp
+units.o: units.cc ../units.hpp ../cunits.hpp ../sunits.hpp
+utils.o: utils.cc ../cunits.hpp ../sunits.hpp ../cunits.hpp ../utils.hpp \
+ ../generic_label.hpp ../utils.hpp ../graph.hpp ../units.hpp \
+ ../sunits.hpp ../standard_label.hpp sample_graphs.hpp ../graph.hpp
+various.o: various.cc ../graph.hpp ../units.hpp ../cunits.hpp \
+ ../sunits.hpp ../custom_dijkstra_call.hpp
