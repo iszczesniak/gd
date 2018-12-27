@@ -4,7 +4,6 @@
 #include "adaptive_units.hpp"
 #include "generic_label.hpp"
 #include "graph.hpp"
-#include "utils.hpp"
 
 #include <list>
 #include <optional>
