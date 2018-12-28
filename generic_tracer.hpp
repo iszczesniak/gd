@@ -115,6 +115,9 @@ public:
       if (get_cost(*j) + ec == c && get_units(*j).includes(m_units))
         // This is the next label iterator.
         return j;
+
+    // We should never get here!
+    assert(false);
   }
 };
 
