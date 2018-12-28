@@ -1,8 +1,6 @@
 #ifndef GENERAL_LABEL_HPP
 #define GENERAL_LABEL_HPP
 
-#include "utils.hpp"
-
 #include <ostream>
 #include <set>
 #include <tuple>
