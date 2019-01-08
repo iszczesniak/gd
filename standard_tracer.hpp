@@ -4,9 +4,6 @@
 #include "graph.hpp"
 
 template <typename Label>
-struct label_traits;
-
-template <typename Label>
 auto
 get_cost(const Label &);
 
