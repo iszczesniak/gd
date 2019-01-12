@@ -51,8 +51,8 @@ struct generic_label
   bool
   operator == (const self &j) const
   {
-    return cost == j.cost && target == j.target &&
-           edge == j.edge && units == j.units;
+    return std::tie(cost, target, edge, units) ==
+      std::tie(j.cost, j.target, j.edge, j.units);
   }
 
   bool
@@ -61,8 +61,8 @@ struct generic_label
     // We compare first the cost and target, since they are the most
     // likely to differ.  We compare the units at the very end,
     // because that comparison is time-consuming.
-    return cost != j.cost || target != j.target ||
-           edge != j.edge || units != j.units;
+    return std::tie(cost, target, edge, units) !=
+      std::tie(j.cost, j.target, j.edge, j.units);
   }
 
   // This operator is used by containers to establish the order
@@ -79,10 +79,8 @@ struct generic_label
   bool
   operator < (const self &j) const
   {
-    using tpl = std::tuple<const Cost &, const Units &,
-			   const Edge<Graph> &, const Vertex<Graph> &>;
-    return tpl(cost, units, edge, target) <
-      tpl(j.cost, j.units, j.edge, j.target);
+    return std::tie(cost, units, edge, target) <
+      std::tie(j.cost, j.units, j.edge, j.target);
   }
 
   // This operator is used by our algorithm.
