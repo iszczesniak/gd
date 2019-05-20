@@ -26,8 +26,8 @@ typedef generic_solution<graph, COST, CU> sol_type;
 // graph is a simple case of two nodes and a single link.
 BOOST_AUTO_TEST_CASE(dijkstra_test_1)
 {
-  // Play.  Safe.
-  adaptive_units<COST>::longest_shortest_path(100);
+  // Play safe.
+  adaptive_units<COST>::set_reach_1(100);
   routing::set_st(routing::st_t::first);
 
   graph g(2);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(dijkstra_test_1)
 BOOST_AUTO_TEST_CASE(dijkstra_test_2)
 {
   // Play.  Safe.
-  adaptive_units<COST>::longest_shortest_path(100);
+  adaptive_units<COST>::set_reach_1(100);
   routing::set_st(routing::st_t::first);
 
   graph g(2);
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(dijkstra_test_2)
 // shortest path, but with a different su.
 BOOST_AUTO_TEST_CASE(dijkstra_test_3)
 {
-  // Play.  Safe.
-  adaptive_units<COST>::longest_shortest_path(100);
+  // Play.  Safe.  Durex.
+  adaptive_units<COST>::set_reach_1(100);
   routing::set_st(routing::st_t::first);
 
   graph g(3);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(dijkstra_test_3)
 BOOST_AUTO_TEST_CASE(dijkstra_test_4)
 {
   // Play.  Safe.
-  adaptive_units<COST>::longest_shortest_path(100);
+  adaptive_units<COST>::set_reach_1(100);
   routing::set_st(routing::st_t::first);
 
   graph g(3);
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(dijkstra_test_4)
 BOOST_AUTO_TEST_CASE(dijkstra_test_5)
 {
   // Play.  Safe.
-  adaptive_units<COST>::longest_shortest_path(100);
+  adaptive_units<COST>::set_reach_1(100);
   routing::set_st(routing::st_t::first);
 
   graph g(3);

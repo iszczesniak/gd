@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(adaptive_units_units)
 {
   using au = adaptive_units<COST>;
 
-  au::longest_shortest_path(6666.66667);
+  au::set_reach_1(10000);
   BOOST_CHECK(au::units(10, 0) == 10);
 
   BOOST_CHECK(au::units(10, 1250) == 10);
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(adaptive_units_reach)
 {
   using au = adaptive_units<COST>;
 
-  au::longest_shortest_path(6666.66667);
+  au::set_reach_1(10000);
   BOOST_CHECK_CLOSE(au::reach(10, 10), 1250, 0.1);
   BOOST_CHECK_CLOSE(au::reach(10, 20), 2500, 0.1);
   BOOST_CHECK_CLOSE(au::reach(10, 30), 5000, 0.1);

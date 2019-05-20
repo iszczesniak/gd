@@ -49,7 +49,7 @@ simulate(const cli_args &args_para)
   calc_sp_stats(g, hop_acc, len_acc);
 
   // Report the length of the longest shortest path.
-  adaptive_units<COST>::longest_shortest_path(ba::max(len_acc));
+  adaptive_units<COST>::set_reach_1(1.5 * ba::max(len_acc));
 
   // Calculate the mean connection arrival time.
   args.mcat = calc_mcat(g, ba::mean(hop_acc), args.mht,
