@@ -11,13 +11,6 @@ The link to the article: <https://arxiv.org/abs/1810.04481>
 This repository has far more than just the algoritm implementation.
 It's the whole simulator with the competing algorithms implemented.
 
-# A minimal project
-
-If you want to get a minimal example with the algorithm
-implementation, please go to:
-
-https://github.com/iszczesniak/gde
-
 ## Download
 
 You can download the implementation at:
@@ -27,6 +20,11 @@ You can download the implementation at:
 Or you can use git:
 
 `git clone http://github.com/iszczesniak/gd.git`
+
+## A minimal project
+
+If you want to get a minimal example with the algorithm
+implementation, [please click here](../gde).
 
 ## Author, Affiliation and License
 
