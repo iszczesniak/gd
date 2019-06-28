@@ -1,0 +1,3 @@
+[submodule "des"]
+	path = des
+	url = https://github.com/iszczesniak/des

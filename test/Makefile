@@ -6,7 +6,6 @@ OBJS = sample_graphs.o ../client.o ../cli_args.o ../connection.o	\
 CXXFLAGS = -g -Wno-deprecated -std=c++17
 
 CXXFLAGS := $(CXXFLAGS) -I ../
-CXXFLAGS := $(CXXFLAGS) -I ../include
 
 ifdef BOOST_ROOT
 	CXXFLAGS := $(CXXFLAGS) -I $(BOOST_ROOT)/include

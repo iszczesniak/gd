@@ -2,18 +2,14 @@ adaptive_units.o: adaptive_units.cc ../adaptive_units.hpp ../graph.hpp \
  ../units.hpp ../cunits.hpp ../sunits.hpp ../utils.hpp \
  ../generic_label.hpp ../graph.hpp ../standard_label.hpp
 cli_args.o: cli_args.cc ../cli_args.hpp ../connection.hpp ../graph.hpp \
- ../units.hpp ../cunits.hpp ../sunits.hpp ../routing.hpp ../sim.hpp \
- ../include/simulation.hpp ../include/event.hpp ../include/module.hpp \
- ../include/module.hpp ../utils.hpp ../generic_label.hpp \
- ../standard_label.hpp
+ ../units.hpp ../cunits.hpp ../sunits.hpp ../routing.hpp ../utils.hpp \
+ ../generic_label.hpp ../standard_label.hpp
 dijkstra.o: dijkstra.cc ../graph.hpp ../units.hpp ../cunits.hpp \
  ../sunits.hpp ../accountant.hpp ../adaptive_units.hpp \
  ../generic_dijkstra.hpp ../dijkstra.hpp ../generic_solution.hpp \
  ../generic_label.hpp ../generic_label.hpp ../generic_label_creator.hpp \
  ../adaptive_units.hpp ../graph.hpp ../generic_tracer.hpp ../routing.hpp \
- ../sim.hpp ../include/simulation.hpp ../include/event.hpp \
- ../include/module.hpp ../include/module.hpp ../utils.hpp \
- ../standard_label.hpp
+ ../utils.hpp ../standard_label.hpp
 graph.o: graph.cc ../generic_label.hpp ../graph.hpp ../units.hpp \
  ../cunits.hpp ../sunits.hpp
 sample_graphs.o: sample_graphs.cc sample_graphs.hpp ../graph.hpp \

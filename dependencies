@@ -1,38 +1,35 @@
 cli_args.o: cli_args.cc cli_args.hpp connection.hpp graph.hpp units.hpp \
- cunits.hpp sunits.hpp routing.hpp sim.hpp include/simulation.hpp \
- include/event.hpp include/module.hpp include/module.hpp utils.hpp \
- generic_label.hpp standard_label.hpp
+ cunits.hpp sunits.hpp routing.hpp utils.hpp generic_label.hpp \
+ standard_label.hpp
 client.o: client.cc client.hpp connection.hpp graph.hpp units.hpp \
- cunits.hpp sunits.hpp include/module.hpp sim.hpp include/simulation.hpp \
- include/event.hpp include/module.hpp stats.hpp cli_args.hpp routing.hpp \
- include/event.hpp traffic.hpp utils.hpp generic_label.hpp \
- standard_label.hpp
+ cunits.hpp sunits.hpp des/include/module.hpp sim.hpp \
+ des/include/simulation.hpp des/include/event.hpp des/include/module.hpp \
+ stats.hpp cli_args.hpp routing.hpp des/include/event.hpp traffic.hpp \
+ utils.hpp generic_label.hpp standard_label.hpp
 connection.o: connection.cc connection.hpp graph.hpp units.hpp cunits.hpp \
- sunits.hpp routing.hpp sim.hpp include/simulation.hpp include/event.hpp \
- include/module.hpp include/module.hpp utils.hpp generic_label.hpp \
- standard_label.hpp
+ sunits.hpp routing.hpp utils.hpp generic_label.hpp standard_label.hpp
 gd.o: gd.cc adaptive_units.hpp cli_args.hpp connection.hpp graph.hpp \
  units.hpp cunits.hpp sunits.hpp routing.hpp sim.hpp \
- include/simulation.hpp include/event.hpp include/module.hpp \
- include/module.hpp stats.hpp include/event.hpp traffic.hpp client.hpp \
- utils.hpp generic_label.hpp standard_label.hpp
+ des/include/simulation.hpp des/include/event.hpp des/include/module.hpp \
+ des/include/module.hpp stats.hpp des/include/event.hpp traffic.hpp \
+ client.hpp utils.hpp generic_label.hpp standard_label.hpp
 routing.o: routing.cc routing.hpp graph.hpp units.hpp cunits.hpp \
- sunits.hpp sim.hpp include/simulation.hpp include/event.hpp \
- include/module.hpp include/module.hpp accountant.hpp \
- accounted_solution.hpp adaptive_units.hpp custom_dijkstra_call.hpp \
- generic_dijkstra.hpp dijkstra.hpp generic_solution.hpp generic_label.hpp \
- generic_label_creator.hpp generic_tracer.hpp stats.hpp cli_args.hpp \
- connection.hpp include/event.hpp traffic.hpp client.hpp \
- standard_dijkstra.hpp standard_label.hpp standard_solution.hpp \
- standard_constrained_label_creator.hpp standard_label_creator.hpp \
- standard_tracer.hpp yen_ksp.hpp utils.hpp
+ sunits.hpp accountant.hpp accounted_solution.hpp adaptive_units.hpp \
+ custom_dijkstra_call.hpp generic_dijkstra.hpp dijkstra.hpp \
+ generic_solution.hpp generic_label.hpp generic_label_creator.hpp \
+ generic_tracer.hpp stats.hpp cli_args.hpp connection.hpp \
+ des/include/event.hpp des/include/module.hpp des/include/module.hpp \
+ sim.hpp des/include/simulation.hpp des/include/event.hpp traffic.hpp \
+ client.hpp standard_dijkstra.hpp standard_label.hpp \
+ standard_solution.hpp standard_constrained_label_creator.hpp \
+ standard_label_creator.hpp standard_tracer.hpp yen_ksp.hpp utils.hpp
 stats.o: stats.cc client.hpp connection.hpp graph.hpp units.hpp \
- cunits.hpp sunits.hpp include/module.hpp sim.hpp include/simulation.hpp \
- include/event.hpp include/module.hpp routing.hpp stats.hpp cli_args.hpp \
- include/event.hpp traffic.hpp utils.hpp generic_label.hpp \
- standard_label.hpp
+ cunits.hpp sunits.hpp des/include/module.hpp sim.hpp \
+ des/include/simulation.hpp des/include/event.hpp des/include/module.hpp \
+ routing.hpp stats.hpp cli_args.hpp des/include/event.hpp traffic.hpp \
+ utils.hpp generic_label.hpp standard_label.hpp
 traffic.o: traffic.cc traffic.hpp client.hpp connection.hpp graph.hpp \
- units.hpp cunits.hpp sunits.hpp include/module.hpp sim.hpp \
- include/simulation.hpp include/event.hpp include/module.hpp
+ units.hpp cunits.hpp sunits.hpp des/include/module.hpp sim.hpp \
+ des/include/simulation.hpp des/include/event.hpp des/include/module.hpp
 utils.o: utils.cc utils.hpp generic_label.hpp graph.hpp units.hpp \
  cunits.hpp sunits.hpp standard_label.hpp

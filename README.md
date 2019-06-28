@@ -19,7 +19,7 @@ You can download the implementation at:
 
 Or you can use git:
 
-`git clone http://github.com/iszczesniak/gd.git`
+`git clone --recurse-submodules http://github.com/iszczesniak/gd.git`
 
 ## A minimal project
 

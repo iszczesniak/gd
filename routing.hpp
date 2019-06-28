@@ -2,11 +2,10 @@
 #define ROUTING_HPP
 
 #include "graph.hpp"
-#include "sim.hpp"
 
 #include <optional>
 
-class routing: public sim
+class routing
 {  
 public:
   // The type of specturm selection:
