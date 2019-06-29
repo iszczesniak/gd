@@ -12,9 +12,6 @@ simulate(const cli_args &args_para)
 {
   cli_args args = args_para;
 
-  // Set the maximal length of a path.
-  routing::set_ml(args.ml);
-
   // Set the K for the k-shortest paths.
   routing::set_K(args.K);
 

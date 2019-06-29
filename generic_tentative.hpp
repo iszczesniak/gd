@@ -1,5 +1,5 @@
-#ifndef GENERAL_SOLUTION_HPP
-#define GENERAL_SOLUTION_HPP
+#ifndef GENERIC_TENTATIVE_HPP
+#define GENERIC_TENTATIVE_HPP
 
 #include "generic_label.hpp"
 
@@ -8,7 +8,10 @@
 #include <utility>
 
 template <typename Graph, typename Cost, typename Units>
-struct generic_solution:
+using generic_labels = std::set<generic_label<Graph, Cost, Units>>;
+
+template <typename Graph, typename Cost, typename Units>
+struct generic_tentative:
   public std::map<Vertex<Graph>, generic_labels<Graph, Cost, Units>>
 {
   using base_type = std::map<Vertex<Graph>,
@@ -31,24 +34,7 @@ struct generic_solution:
     assert(status);
   }
 
-  auto
-  insert(typename labels_type::node_type &&nh)
-  {
-    // The label of the node handle.
-    const auto &l = nh.value();
-    // The target of the label.
-    vertex_type trg = get_target(l);
-    // The target labels.
-    labels_type &trg_labels = base_type::operator[](trg);
-    // The insert return value.
-    auto irv = trg_labels.insert(std::move(nh));
-    // Make sure the insertion was successful.
-    assert(irv.inserted);
-    // Return the result of the insertion.
-    return irv;
-  }
-
-  auto
+  label_type
   pop()
   {
     // Find the set with the label of the lowest cost.
@@ -72,8 +58,8 @@ struct generic_solution:
     if (src_labels.empty())
       base_type::erase(qi);
 
-    return nh;
+    return std::move(nh.value());
   }
 };
 
-#endif // GENERAL_SOLUTION_HPP
+#endif // GENERIC_TENTATIVE_HPP

@@ -27,14 +27,9 @@ class generic_label_creator
   // The number of contiguous units initially requested.
   int m_ncu;
 
-  // The optional maximal length.
-  std::optional<COST> m_ml;
-
 public:
-  generic_label_creator(const Graph &g, int ncu,
-                        const std::optional<Cost>
-                        &ml = std::optional<Cost>()):
-    m_g(g), m_ncu(ncu), m_ml(ml)
+  generic_label_creator(const Graph &g, int ncu):
+    m_g(g), m_ncu(ncu)
   {
   }
 
@@ -46,31 +41,22 @@ public:
     // Candidate cost.
     Cost c_c = get_cost(l) + ec;
 
-    // Constriction: consider that path when there is no maximal
-    // length given or when the new lenght is not greater than the
-    // limit.
-    if (!m_ml || c_c <= m_ml.value())
-      {
-        // The label units.
-        const Units &l_units = get_units(l);
-        // The units available on the edge.
-        const auto &e_su = boost::get(boost::edge_su, m_g, e);
-        // The candidate SU: the su of label l that can be carried by
-        // edge e, and that has at least ncu contiguous units.
-        auto c_su = intersection(SU{l_units}, e_su);
-        c_su.remove(adaptive_units<COST>::units(m_ncu, c_c));
+    // The label units.
+    const Units &l_units = get_units(l);
+    // The units available on the edge.
+    const auto &e_su = boost::get(boost::edge_su, m_g, e);
+    // The candidate SU: the su of label l that can be carried by
+    // edge e, and that has at least ncu contiguous units.
+    auto c_su = intersection(SU{l_units}, e_su);
+    c_su.remove(adaptive_units<COST>::units(m_ncu, c_c));
 
-	std::list<Label> l;
+    std::list<Label> ls;
 
-	for (auto &cu: c_su)
-	  // The candidate label.
-	  l.push_back(Label(c_c, std::move(cu), e, target(e, m_g)));
+    for (auto &cu: c_su)
+      // The candidate label.
+      ls.push_back(Label(c_c, std::move(cu), e, target(e, m_g)));
 
-	return l;
-      }
-
-    // There is no label.
-    throw true;
+    return ls;
   }
 };
 

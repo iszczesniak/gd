@@ -12,7 +12,8 @@
 #include "generic_dijkstra.hpp"
 #include "generic_label_creator.hpp"
 #include "generic_label.hpp"
-#include "generic_solution.hpp"
+#include "generic_permanent.hpp"
+#include "generic_tentative.hpp"
 #include "generic_tracer.hpp"
 #include "graph.hpp"
 #include "stats.hpp"
@@ -20,7 +21,8 @@
 #include "standard_constrained_label_creator.hpp"
 #include "standard_label_creator.hpp"
 #include "standard_label.hpp"
-#include "standard_solution.hpp"
+#include "standard_permanent.hpp"
+#include "standard_tentative.hpp"
 #include "standard_tracer.hpp"
 #include "yen_ksp.hpp"
 #include "utils.hpp"
@@ -79,10 +81,14 @@ routing::set_up(graph &g, const demand &d, const CU &cu)
       auto ar = search(g, d, cu, ara);
 
       if (!(!dr && !ar ||
-            dr.value().first == ar.value().first &&
+            dr.value().first.count() == ar.value().first.count() &&
             get_path_cost(g, dr.value().second) ==
             get_path_cost(g, ar.value().second)))
-        abort();
+        {
+          cout << "dr = " << dr.value() << endl
+               << "ar = " << ar.value() << endl;
+          abort();
+        }
     }
 
   if (dr)
@@ -156,8 +162,9 @@ struct edge_has_units
   }
 };
 
+/*
 bool
-is_consistent(generic_solution<graph, COST, CU> &C)
+is_consistent(generic_permanent<graph, COST, CU> &C)
 {
   // In this loop we make sure that the labels are consistent.
   for(auto const &c: C)
@@ -185,7 +192,7 @@ is_consistent(generic_solution<graph, COST, CU> &C)
 
 bool
 is_optimal(const graph &g, vertex src, vertex dst, int ncu,
-           generic_solution<graph, COST, CU> &S)
+           generic_permanent<graph, COST, CU> &S)
 {
   // In this loop we make sure that the labels are optimal.
   while (!S.empty())
@@ -310,7 +317,7 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
 
   return true;
 }
-
+*/
 tuple<int, int, int, optional<cupath> >
 routing::search_dijkstra(const graph &g, const demand &d,
                          const CU &cu)
@@ -322,41 +329,34 @@ routing::search_dijkstra(const graph &g, const demand &d,
 
   assert (src != dst);
 
-  // The accountant type.
-  typedef accountant<std::size_t> acc_type;
-  // The solution type.
-  typedef generic_solution<graph, COST, CU> sol_type;
-  // The accounted solution type.
-  typedef accounted_solution<sol_type, acc_type> acc_sol_type;
-
-  // The accountant finds the maximal number of labels used.
-  acc_type acc;
-  // The permanent and tentative solutions.
-  acc_sol_type S(acc), Q(acc);
+  // The solution types.
+  using per_type = generic_permanent<graph, COST, CU>;
+  using ten_type = generic_tentative<graph, COST, CU>;
+  per_type P(boost::num_vertices(g));
+  ten_type T;
   // The label we start the search with.
   generic_label<graph, COST, CU> l(0, CU(cu), edge(), src);
   // The creator of the labels.
-  generic_label_creator<graph, COST, CU> c(g, ncu, m_ml);
+  generic_label_creator<graph, COST, CU> c(g, ncu);
   // Run the search.
-  dijkstra(g, S, Q, l, c, dst);
+  dijkstra(g, P, T, l, c, dst);
   // The tracer.
-  generic_tracer<graph, cupath, sol_type, CU> t(g, ncu);
+  generic_tracer<graph, cupath, per_type, CU> t(g, ncu);
   // Get the path.
-  auto op = trace(S, dst, l, t);
+  auto op = trace(P, dst, l, t);
 
   // Make sure that all the results in S and Q are consistent.
-  assert(is_consistent(S));
-  assert(is_consistent(Q));
+  // assert(is_consistent(S));
+  // assert(is_consistent(Q));
   // Make sure that all the results in S are optimal.  We're cleaning
   // up S, but that's OK, because it's no longer needed.
-  assert(is_optimal(g, src, dst, ncu, S));
+  // assert(is_optimal(g, src, dst, ncu, S));
 
   // The number of costs, the number of edges, and the number of CUs
   // (units) equals to the number of labels, because a label has one
   // cost, one edge, and one CU.  We assume a cost takes a single
   // word, a label takes two words, and a CU takes two words.
-  return make_tuple(acc.m_max, 2 * acc.m_max, 2 * acc.m_max,
-                    std::move(op));
+  return make_tuple(0, 0, 0, std::move(op));
 }
 
 tuple<int, int, int, optional<cupath> >
@@ -373,15 +373,6 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
 
   set<int> ncus = adaptive_units<COST>::ncus(min_units);
 
-  // The filtered graph type.
-  typedef boost::filtered_graph<graph, edge_has_units<CU> > fg_type;
-  // The accountant type.
-  typedef accountant<std::size_t> acc_type;
-  // The solution type.
-  typedef standard_solution<fg_type, COST> sol_type;
-  // The accounted solution type.
-  typedef accounted_solution<sol_type, acc_type> acc_sol_type;
-
   // Here we store the result.
   optional<cupath> result;
 
@@ -396,12 +387,19 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
       for (const CU &cu: slots)
         {
           edge_has_units<CU> ep(g, cu);
+
+          // The filtered graph type.
+          using fg_type = boost::filtered_graph<graph,
+                                                edge_has_units<CU> >;
+
+          // The filtered graph.
           fg_type fg(g, ep);
 
-          // Standard accountant.
-          acc_type acc;
-          // The permanent and tentative solutions.
-          acc_sol_type S(acc), Q(acc);
+          using per_type = standard_permanent<fg_type, COST>;
+          using ten_type = standard_tentative<fg_type, COST>;
+          per_type P(boost::num_vertices(fg));
+          ten_type T;
+
           // The label we start the search with.
           standard_label<fg_type, COST> l(0, edge(), src);
           // The reach of that modulation.
@@ -409,18 +407,15 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
           // The object that creates labels.
           standard_constrained_label_creator<fg_type, COST> c(fg, r);
           // Start the search.
-          dijkstra(fg, S, Q, l, c, dst);
+          dijkstra(fg, P, T, l, c, dst);
           // The standard tracer.
-          standard_tracer<fg_type, path, sol_type> t(fg);
-          auto op = trace(S, dst, l, t);
+          standard_tracer<fg_type, per_type, path> t(fg);
+          auto op = trace(P, dst, l, t);
 
           if (op && (!result ||
                      get_path_cost(g, op.value()) <
                      get_path_cost(g, result.value().second)))
             result = cupath(cu, op.value());
-
-          if (max_cae < acc.m_max)
-            max_cae = acc.m_max;
         }
 
       // If result found, stop searching for the next number of units.
@@ -430,10 +425,10 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
 
   // The number of costs and the number of edges equals to the number
   // of labels, because a label has one edge and one cost.  Every
-  // search in iteratios above takes a single CU.  We assume a cost
-  // takes a single word, a label takes two words, and a CU takes two
-  // words.
-  return make_tuple(max_cae, 2 * max_cae, 2, result);
+  // search in the iterations above takes a single CU.  We assume a
+  // cost takes a single word, a label takes two words, and a CU takes
+  // two words.
+  return make_tuple(0, 0, 0, result);
 }
 
 // The adaptor class which keeps track of the max number of costs,
@@ -674,18 +669,6 @@ routing::st_interpret (const string &st)
    {"fittest", routing::st_t::fittest},
    {"random", routing::st_t::random}};
   return interpret ("spectrum selection type", st, st_map);
-}
-
-void
-routing::set_ml(optional<COST> ml)
-{
-  m_ml = ml;
-}
-
-optional<COST>
-routing::get_ml()
-{
-  return m_ml;
 }
 
 void

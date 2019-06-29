@@ -1,5 +1,5 @@
-#ifndef STANDARD_SOLUTION_HPP
-#define STANDARD_SOLUTION_HPP
+#ifndef STANDARD_TENTATIVE_HPP
+#define STANDARD_TENTATIVE_HPP
 
 #include "standard_label.hpp"
 
@@ -9,14 +9,15 @@
 
 // The container type for storing both permanent and tentative labels.
 template <typename Graph, typename Cost>
-struct standard_solution:
+struct standard_tentative:
   public std::map<Vertex<Graph>, standard_label<Graph, Cost>>
 {
   using label_type = standard_label<Graph, Cost>;
   using base_type = std::map<Vertex<Graph>, standard_label<Graph, Cost>>;
 
+  template<typename T>
   void
-  push(const label_type &l)
+  push(T &&l)
   {
     // The target vertex of the label.
     Vertex<Graph> t = get_target(l);
@@ -24,32 +25,17 @@ struct standard_solution:
     auto i = base_type::find(t);
     // Just insert the label if the vertex t doesn't have one.
     if (i == base_type::end())
-      base_type::operator[](t) = l;
+      base_type::operator[](t) = std::forward<T>(l);
     else
       {
         // We are about to replace the label for the target vertex t.
         // Make sure that the new label is of the lower cost.
         assert (get_cost(l) < get_cost(i->second));
-        i->second = l;
+        i->second = std::forward<T>(l);
       }
   }
 
-  auto
-  insert(typename base_type::node_type &&nh)
-  {
-    // The insert return value.
-    auto irv = base_type::insert(std::move(nh));
-
-    // Make sure the move succeeded, because in S there should not be
-    // a result for the key (the target vertex) of the map pair in Q
-    // pointed to by qi.  Otherwise, that would mean that we found a
-    // permanent label for the target vertex twice.
-    assert(irv.inserted);
-
-    return irv;
-  }
-
-  auto
+  label_type
   pop()
   {
     // Find the set with the label of the lowest cost.
@@ -65,8 +51,8 @@ struct standard_solution:
     // Make sure we extracted a node.
     assert(nh);
 
-    return nh;
+    return std::move(nh.mapped());
   }
 };
 
-#endif // STANDARD_SOLUTION_HPP
+#endif // STANDARD_TENTATIVE_HPP

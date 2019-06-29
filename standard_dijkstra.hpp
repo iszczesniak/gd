@@ -2,34 +2,49 @@
 #define STANDARD_DIJKSTRA_HPP
 
 #include "standard_label.hpp"
-#include "standard_solution.hpp"
+#include "standard_permanent.hpp"
+#include "standard_tentative.hpp"
 
 #include <cassert>
 #include <map>
 
-// Move the best label from Q to L, and return a reference to the
+// Move the best label from T to P, and return a reference to the
 // label in the new place.
 template <typename Graph, typename Cost>
 auto
-move_label(standard_solution<Graph, Cost> &S,
-           standard_solution<Graph, Cost> &Q)
+move_label(standard_tentative<Graph, Cost> &T,
+           standard_permanent<Graph, Cost> &P)
 {
-  auto p = S.insert(Q.pop());
-
-  // Make sure we moved the label.
-  assert(p.inserted);
-
-  // That's the label.
-  const auto &l = p.position->second;
-
-  return l;
+  return P.push(T.pop());
 }
 
 // Here we compare only the cost of the labels.  Each node can have
 // only one label.
 template <typename Graph, typename Cost>
 bool
-has_better_or_equal(const standard_solution<Graph, Cost> &S,
+has_better_or_equal(const standard_permanent<Graph, Cost> &C,
+                    const standard_label<Graph, Cost> &j)
+{
+  // The wrapped label.
+  const auto &wi = C[get_target(j)];
+
+  if (wi)
+    {
+      const auto &i = *wi;
+      // Make sure the targets are the same.
+      assert(get_target(i) == get_target(j));
+      // Here we use the <= operator we define.
+      return (i <= j);
+    }
+
+  return false;
+}
+
+// Here we compare only the cost of the labels.  Each node can have
+// only one label.
+template <typename Graph, typename Cost>
+bool
+has_better_or_equal(const standard_tentative<Graph, Cost> &S,
                     const standard_label<Graph, Cost> &j)
 {
   // Find the target node of label l.
@@ -48,7 +63,7 @@ has_better_or_equal(const standard_solution<Graph, Cost> &S,
 
 template <typename Graph, typename Cost>
 void
-purge_worse(standard_solution<Graph, Cost> &Q,
+purge_worse(standard_tentative<Graph, Cost> &Q,
             const standard_label<Graph, Cost> &j)
 {
   // Do nothing, because even if there is a worse label (i.e., of the
