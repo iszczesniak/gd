@@ -1,0 +1,38 @@
+graph G {
+v01;
+v02;
+v03;
+v04;
+v05;
+v06;
+v07;
+v08;
+v09;
+v10;
+v11;
+v12;
+v13;
+v14;
+v15;
+v01--v03  [weight=59];
+v02--v03  [weight=127];
+v02--v04  [weight=70];
+v03--v06  [weight=98];
+v04--v05  [weight=56];
+v04--v07  [weight=58];
+v05--v06  [weight=63];
+v05--v07  [weight=69];
+v06--v08  [weight=131];
+v07--v09  [weight=158];
+v07--v10  [weight=144];
+v08--v12  [weight=77];
+v09--v10  [weight=81];
+v09--v13  [weight=66];
+v10--v13  [weight=102];
+v10--v14  [weight=88];
+v10--v15  [weight=86];
+v11--v12  [weight=25];
+v11--v14  [weight=66];
+v13--v15  [weight=77];
+v14--v15  [weight=68];
+}
