@@ -4,61 +4,82 @@
 #include "generic_label.hpp"
 
 #include <cassert>
-#include <map>
-#include <utility>
+#include <queue>
+#include <set>
+#include <vector>
 
+// The container type for storing the generic tentative labels.  A
+// vertex can have many shared (with the priority queue) labels or
+// none.  For each vertex we store a container or shared_ptrs to
+// labels, because we create a weak_ptr in the priority queue.
 template <typename Graph, typename Cost, typename Units>
-using generic_labels = std::set<generic_label<Graph, Cost, Units>>;
-
-template <typename Graph, typename Cost, typename Units>
-struct generic_tentative:
-  public std::map<Vertex<Graph>, generic_labels<Graph, Cost, Units>>
+struct generic_tentative
 {
-  using base_type = std::map<Vertex<Graph>,
-			     generic_labels<Graph, Cost, Units>>;
-  using label_type = generic_label<Graph, Cost, Units>;
-  using labels_type = generic_labels<Graph, Cost, Units>;
-  using vertex_type = Vertex<Graph>;
+  // That's the label type we're using.
+  using label_t = generic_label<Graph, Cost, Units>;
+  // The type of data a vertex has.
+  using vd_t = std::set<label_t>;
+  // The type of the vector of vertex data.
+  using vovd_t = std::vector<vd_t>;
+  // The size type of the vovd_t.
+  using size_type = typename vovd_t::size_type;
+  // The type of the vertex descriptor.
+  using vertex_t = Vertex<Graph>;
 
+  // The vector of vertex data.
+  vovd_t m_vovd;
+
+  // The priority queue element type.
+  using pqet = std::pair<Cost, vertex_t>;
+
+  // The priority queue.
+  std::set<pqet> m_pq;
+
+  // The constructor builds a vector of data for each vertex.
+  generic_tentative(size_type count): m_vovd(count)
+  {
+  }
+
+  // This function pushes a new label.
   template <typename T>
   void
   push(T &&l)
   {
-    // The target of the label.
-    vertex_type trg = get_target(l);
-    // The target labels.
-    labels_type &trg_labels = base_type::operator[](trg);
-    // Insert the label.
-    bool status = trg_labels.insert(std::forward<T>(l)).second;
-    // The insertion should always succeed.
-    assert(status);
   }
 
-  label_type
+  bool
+  empty() const
+  {
+    return m_pq.empty();
+  }
+
+  label_t
   pop()
   {
-    // Find the set with the label of the lowest cost.
-    auto qi =
-      std::min_element(base_type::begin(), base_type::end(),
-		       [](const auto &a, const auto &b)
-		       {return *a.second.begin() < *b.second.begin();});
-    // Make sure we found the one.
-    assert(qi != base_type::end());
-    // The source labels we move from.
-    labels_type &src_labels = qi->second;
-    // The iterator to the label we move.
-    auto li = src_labels.cbegin();
-
-    // Extract the node.
-    auto nh = src_labels.extract(li);
-    // Make sure we extracted the node.
-    assert(nh);
-    
-    // Remove the src_labels if it is empty.
-    if (src_labels.empty())
-      base_type::erase(qi);
-
+    assert(!m_pq.empty());
+    const auto [c, t] = *m_pq.begin();
+    m_pq.erase(m_pq.begin());
+    auto &vd = m_vovd[t];
+    assert(!vd.empty());
+    auto nh = vd.extract(vd.begin());
+    assert(get_cost(nh.value()) == c);
     return std::move(nh.value());
+  }
+
+  // This is a const member, because we allow the random access, but
+  // disallow the modification of the element.
+  const vd_t &
+  operator[](size_type i) const
+  {
+    return m_vovd[i];
+  }
+
+  // This operator returns a reference to the vertex data, which we
+  // can modify.
+  vd_t &
+  operator[](size_type i)
+  {
+    return m_vovd[i];
   }
 };
 

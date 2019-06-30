@@ -13,6 +13,17 @@ gd.o: gd.cc adaptive_units.hpp cli_args.hpp connection.hpp graph.hpp \
  des/include/simulation.hpp des/include/event.hpp des/include/module.hpp \
  des/include/module.hpp stats.hpp des/include/event.hpp traffic.hpp \
  client.hpp utils.hpp generic_label.hpp standard_label.hpp
+routing.o: routing.cc routing.hpp graph.hpp units.hpp cunits.hpp \
+ sunits.hpp accountant.hpp accounted_solution.hpp adaptive_units.hpp \
+ custom_dijkstra_call.hpp generic_dijkstra.hpp dijkstra.hpp \
+ generic_permanent.hpp generic_label.hpp generic_tentative.hpp \
+ generic_label_creator.hpp generic_tracer.hpp stats.hpp cli_args.hpp \
+ connection.hpp des/include/event.hpp des/include/module.hpp \
+ des/include/module.hpp sim.hpp des/include/simulation.hpp \
+ des/include/event.hpp traffic.hpp client.hpp standard_dijkstra.hpp \
+ standard_label.hpp standard_permanent.hpp standard_tentative.hpp \
+ standard_constrained_label_creator.hpp standard_label_creator.hpp \
+ standard_tracer.hpp yen_ksp.hpp utils.hpp
 stats.o: stats.cc client.hpp connection.hpp graph.hpp units.hpp \
  cunits.hpp sunits.hpp des/include/module.hpp sim.hpp \
  des/include/simulation.hpp des/include/event.hpp des/include/module.hpp \

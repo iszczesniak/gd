@@ -333,7 +333,7 @@ routing::search_dijkstra(const graph &g, const demand &d,
   using per_type = generic_permanent<graph, COST, CU>;
   using ten_type = generic_tentative<graph, COST, CU>;
   per_type P(boost::num_vertices(g));
-  ten_type T;
+  ten_type T(boost::num_vertices(g));
   // The label we start the search with.
   generic_label<graph, COST, CU> l(0, CU(cu), edge(), src);
   // The creator of the labels.
@@ -398,7 +398,7 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
           using per_type = standard_permanent<fg_type, COST>;
           using ten_type = standard_tentative<fg_type, COST>;
           per_type P(boost::num_vertices(fg));
-          ten_type T;
+          ten_type T(boost::num_vertices(fg));
 
           // The label we start the search with.
           standard_label<fg_type, COST> l(0, edge(), src);
