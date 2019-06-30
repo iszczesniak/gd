@@ -35,8 +35,11 @@ struct generic_tentative
   // The priority queue.
   std::set<pqet> m_pq;
 
+  // Vetext to cost reverse look up of the priority queue elements.
+  std::vector<std::optional<Cost>> m_v2c;
+
   // The constructor builds a vector of data for each vertex.
-  generic_tentative(size_type count): m_vovd(count)
+  generic_tentative(size_type count): m_vovd(count), m_v2c(count)
   {
   }
 
@@ -45,6 +48,22 @@ struct generic_tentative
   void
   push(T &&l)
   {
+    vertex_t t = get_target(l);
+    Cost c = get_cost(l);
+    auto &vd = m_vovd[t];
+    auto [i, s] = vd.insert(std::forward<T>(l));
+    // Make sure the insertion was successful.
+    assert(s);
+    if (i == vd.begin())
+      {
+        // There already can be an element in the queue for t.
+        auto &o = m_v2c[t];
+        if (o)
+          // Erase the former element from the queue.
+          m_pq.erase({*o, t});
+        m_pq.insert({c, t});
+        o = c;
+      }
   }
 
   bool
@@ -63,6 +82,18 @@ struct generic_tentative
     assert(!vd.empty());
     auto nh = vd.extract(vd.begin());
     assert(get_cost(nh.value()) == c);
+    auto &o = m_v2c[t];
+    // If there is other label for t, put it into the queue.
+    if (!vd.empty())
+      {
+        const auto &nc = get_cost(*vd.begin());
+        assert(get_target(*vd.begin()) == t);
+        m_pq.insert({nc, t});
+        o = nc;
+      }
+    else
+      o.reset();
+
     return std::move(nh.value());
   }
 
