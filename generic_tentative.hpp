@@ -4,7 +4,6 @@
 #include "generic_label.hpp"
 
 #include <cassert>
-#include <queue>
 #include <set>
 #include <vector>
 
