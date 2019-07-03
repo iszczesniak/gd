@@ -1,6 +1,8 @@
 #ifndef ACCOUNTANT_HPP
 #define ACCOUNTANT_HPP
 
+#include <algorithm>
+
 // This class keeps track of an integer number, and remembers its
 // maximum.  The accountant is shared between the permanent and
 // tentative solutions to find the highest memory usage.
@@ -14,8 +16,7 @@ struct accountant
   operator++()
   {
     ++m_cur;
-    if (m_max < m_cur)
-      m_max = m_cur;
+    m_max = std::max(m_max, m_cur);
     return *this;
   }
 

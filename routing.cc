@@ -329,11 +329,22 @@ routing::search_dijkstra(const graph &g, const demand &d,
 
   assert (src != dst);
 
-  // The solution types.
-  using per_type = generic_permanent<graph, COST, CU>;
-  using ten_type = generic_tentative<graph, COST, CU>;
-  per_type P(boost::num_vertices(g));
-  ten_type T(boost::num_vertices(g));
+  // The accountant type.
+  typedef accountant<std::size_t> acc_type;
+  // The generic permanent solution type.
+  typedef generic_permanent<graph, COST, CU> per_type;
+  // The generic tentative solution type.
+  typedef generic_tentative<graph, COST, CU> ten_type;
+  // The accounted generic permanent solution type.
+  typedef accounted_solution<per_type, acc_type> acc_per_type;
+  // The accounted tentative permanent solution type.
+  typedef accounted_solution<ten_type, acc_type> acc_ten_type;
+
+  // The accountant finds the maximal number of labels used.
+  acc_type acc;
+  // The permanent and tentative solutions.
+  acc_per_type P(acc, boost::num_vertices(g));
+  acc_ten_type T(acc, boost::num_vertices(g));
   // The label we start the search with.
   generic_label<graph, COST, CU> l(0, CU(cu), edge(), src);
   // The creator of the labels.
@@ -341,7 +352,7 @@ routing::search_dijkstra(const graph &g, const demand &d,
   // Run the search.
   dijkstra(g, P, T, l, c, dst);
   // The tracer.
-  generic_tracer<graph, cupath, per_type, CU> t(g, ncu);
+  generic_tracer<graph, cupath, acc_per_type, CU> t(g, ncu);
   // Get the path.
   auto op = trace(P, dst, l, t);
 
@@ -356,7 +367,8 @@ routing::search_dijkstra(const graph &g, const demand &d,
   // (units) equals to the number of labels, because a label has one
   // cost, one edge, and one CU.  We assume a cost takes a single
   // word, a label takes two words, and a CU takes two words.
-  return make_tuple(0, 0, 0, std::move(op));
+  return make_tuple(acc.m_max, 2 * acc.m_max, 2 * acc.m_max,
+                    std::move(op));
 }
 
 tuple<int, int, int, optional<cupath> >
