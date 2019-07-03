@@ -330,15 +330,15 @@ routing::search_dijkstra(const graph &g, const demand &d,
   assert (src != dst);
 
   // The accountant type.
-  typedef accountant<std::size_t> acc_type;
+  using acc_type = accountant<std::size_t>;
   // The generic permanent solution type.
-  typedef generic_permanent<graph, COST, CU> per_type;
+  using per_type = generic_permanent<graph, COST, CU>;
   // The generic tentative solution type.
-  typedef generic_tentative<graph, COST, CU> ten_type;
+  using ten_type = generic_tentative<graph, COST, CU>;
   // The accounted generic permanent solution type.
-  typedef accounted_solution<per_type, acc_type> acc_per_type;
-  // The accounted tentative permanent solution type.
-  typedef accounted_solution<ten_type, acc_type> acc_ten_type;
+  using acc_per_type = accounted_solution<per_type, acc_type>;
+  // The accounted generic tentative solution type.
+  using acc_ten_type = accounted_solution<ten_type, acc_type>;
 
   // The accountant finds the maximal number of labels used.
   acc_type acc;
@@ -407,10 +407,22 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
           // The filtered graph.
           fg_type fg(g, ep);
 
+          // The accountant type.
+          using acc_type = accountant<std::size_t>;
+
+          // The standard permanent solution type.
           using per_type = standard_permanent<fg_type, COST>;
+          // The standard tentative solution type.
           using ten_type = standard_tentative<fg_type, COST>;
-          per_type P(boost::num_vertices(fg));
-          ten_type T(boost::num_vertices(fg));
+          // The accounted standard permanent solution type.
+          using acc_per_type = accounted_solution<per_type, acc_type>;
+          // The accounted standard tentative solution type.
+          using acc_ten_type = accounted_solution<ten_type, acc_type>;
+
+          // Standard accountant.
+          acc_type acc;
+          acc_per_type P(acc, boost::num_vertices(fg));
+          acc_ten_type T(acc, boost::num_vertices(fg));
 
           // The label we start the search with.
           standard_label<fg_type, COST> l(0, edge(), src);
@@ -421,13 +433,16 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
           // Start the search.
           dijkstra(fg, P, T, l, c, dst);
           // The standard tracer.
-          standard_tracer<fg_type, per_type, path> t(fg);
+          standard_tracer<fg_type, acc_per_type, path> t(fg);
           auto op = trace(P, dst, l, t);
 
           if (op && (!result ||
                      get_path_cost(g, op.value()) <
                      get_path_cost(g, result.value().second)))
             result = cupath(cu, op.value());
+
+          if (max_cae < acc.m_max)
+            max_cae = acc.m_max;
         }
 
       // If result found, stop searching for the next number of units.
@@ -437,10 +452,10 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
 
   // The number of costs and the number of edges equals to the number
   // of labels, because a label has one edge and one cost.  Every
-  // search in the iterations above takes a single CU.  We assume a
-  // cost takes a single word, a label takes two words, and a CU takes
-  // two words.
-  return make_tuple(0, 0, 0, result);
+  // search in iteratios above takes a single CU.  We assume a cost
+  // takes a single word, a label takes two words, and a CU takes two
+  // words.
+  return make_tuple(max_cae, 2 * max_cae, 2, result);
 }
 
 // The adaptor class which keeps track of the max number of costs,
