@@ -135,9 +135,6 @@ protected:
   // What another routing algorithms to use.
   static std::set<rt_t> m_aras;
 
-  // The maximal length of a path.
-  static std::optional<COST> m_ml;
-
   // The K for the k-shortest paths.
   static std::optional<unsigned> m_K;
 };

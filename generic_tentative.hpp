@@ -63,6 +63,12 @@ struct generic_tentative:
       }
   }
 
+  bool
+  empty() const
+  {
+    return m_pq.empty();
+  }
+
   label_t
   pop()
   {

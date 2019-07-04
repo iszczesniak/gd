@@ -45,8 +45,6 @@ routing::st_t routing::m_st = routing::st_t::none;
 // Another routing algorithms to use.
 set<routing::rt_t> routing::m_aras;
 
-optional<COST> routing::m_ml;
-
 optional<unsigned> routing::m_K;
 
 optional<cupath>
@@ -356,8 +354,8 @@ routing::search_dijkstra(const graph &g, const demand &d,
   auto op = trace(P, dst, l, t);
 
   // Make sure that all the results in S and Q are consistent.
-  assert(is_consistent(S));
-  assert(is_consistent(Q));
+  assert(is_consistent(P));
+  assert(is_consistent(T));
   // Make sure that all the results in S are optimal.  We're cleaning
   // up S, but that's OK, because it's no longer needed.
   // assert(is_optimal(g, src, dst, ncu, S));
@@ -643,10 +641,6 @@ routing::search_puyenksp(const graph &g, const demand &d, const CU &cu)
 
       // The cost of the path.
       COST c = get_path_cost(g, r.second);
-
-      // Stop the search when the cost is greater than needed.
-      if (m_ml && c > m_ml.value())
-        break;
 
       // This is the path SU.
       SU psu = find_path_su(g, r.second);

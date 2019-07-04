@@ -1,4 +1,4 @@
-TESTS = adaptive_units cli_args dijkstra graph units utils various
+TESTS = adaptive_units cli_args dijkstra graph units utils
 
 OBJS = sample_graphs.o ../client.o ../cli_args.o ../connection.o	\
 	../routing.o ../stats.o ../traffic.o ../utils.o

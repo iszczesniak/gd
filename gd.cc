@@ -52,10 +52,6 @@ simulate(const cli_args &args_para)
   args.mcat = calc_mcat(g, ba::mean(hop_acc), args.mht,
                         args.mnu, args.ol);
 
-  // Calculate the maximal length of a path.
-  if (args.mlc)
-    args.ml = args.mlc.value() * ba::max(len_acc);
-
   // The stats kickoff time.
   args.kickoff = 0;
 

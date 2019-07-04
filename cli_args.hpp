@@ -23,12 +23,6 @@ struct cli_args
   /// The number of units.
   int units;
 
-  /// The maximal length of a path we want.
-  std::optional<COST> ml;
-
-  /// The maximal length coefficient of a path we want.
-  std::optional<float> mlc;
-
   /// The K for the k-shortest paths.
   std::optional<unsigned> K;
 
