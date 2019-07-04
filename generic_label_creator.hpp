@@ -1,5 +1,5 @@
-#ifndef GENERAL_LABEL_CREATOR_HPP
-#define GENERAL_LABEL_CREATOR_HPP
+#ifndef GENERIC_LABEL_CREATOR_HPP
+#define GENERIC_LABEL_CREATOR_HPP
 
 #include "adaptive_units.hpp"
 #include "generic_label.hpp"
@@ -60,4 +60,4 @@ public:
   }
 };
 
-#endif // GENERAL_LABEL_CREATOR_HPP
+#endif // GENERIC_LABEL_CREATOR_HPP

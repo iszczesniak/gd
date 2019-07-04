@@ -17,12 +17,10 @@ struct generic_permanent:
   // The type of data a vertex has.
   using vd_t = std::vector<label_t>;
   // The type of the vector of vertex data.
-  using vovd_t = std::vector<vd_t>;
-  // That's the base class.
-  using base = vovd_t;
+  using base = std::vector<vd_t>;
 
-  // The size type of the vovd_t.
-  using size_type = typename vovd_t::size_type;
+  // The size type of the base.
+  using size_type = typename base::size_type;
 
   generic_permanent(size_type count): base(count)
   {
@@ -36,17 +34,9 @@ struct generic_permanent:
     // The target vertex of the label.
     const auto &t = get_target(l);
     // Push the label back.
-    operator[](t).push_back(std::forward<T>(l));
+    this->operator[](t).push_back(std::forward<T>(l));
 
-    return operator[](t).back();
-  }
-
-  // This is a const member, because we allow the random access, but
-  // disallow the modification of the element.
-  const vd_t &
-  operator[](size_type i) const
-  {
-    return operator[](i);
+    return this->operator[](t).back();
   }
 };
 

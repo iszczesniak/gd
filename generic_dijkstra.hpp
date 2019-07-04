@@ -1,5 +1,5 @@
-#ifndef GENERAL_DIJKSTRA_HPP
-#define GENERAL_DIJKSTRA_HPP
+#ifndef GENERIC_DIJKSTRA_HPP
+#define GENERIC_DIJKSTRA_HPP
 
 #include "dijkstra.hpp"
 #include "generic_permanent.hpp"
@@ -126,4 +126,4 @@ purge_worse(generic_tentative<Graph, Cost, Units> &T,
     }
 }
 
-#endif // GENERAL_DIJKSTRA_HPP
+#endif // GENERIC_DIJKSTRA_HPP

@@ -1,5 +1,5 @@
-#ifndef GENERAL_LABEL_HPP
-#define GENERAL_LABEL_HPP
+#ifndef GENERIC_LABEL_HPP
+#define GENERIC_LABEL_HPP
 
 #include <ostream>
 #include <set>
@@ -128,4 +128,4 @@ get_target(const generic_label<Graph, Cost, Units> &l)
   return l.m_t;
 }
 
-#endif // GENERAL_LABEL_HPP
+#endif // GENERIC_LABEL_HPP
