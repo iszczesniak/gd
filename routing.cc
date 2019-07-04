@@ -162,16 +162,13 @@ struct edge_has_units
   }
 };
 
-/*
+template <typename T>
 bool
-is_consistent(generic_permanent<graph, COST, CU> &C)
+is_consistent(const T &C)
 {
-  // In this loop we make sure that the labels are consistent.
-  for(auto const &c: C)
+  // In this loop we make sure that the labels ls are consistent.
+  for(auto const &ls: C)
     {
-      // These are the labels we examine.
-      const generic_labels<graph, COST, CU> ls = c.second;
-
       // Make sure that the cost of the labels do not decrease.
       if (auto i = ls.begin(); i != ls.end())
         for (auto p = i; ++i != ls.end(); ++p)
@@ -190,6 +187,7 @@ is_consistent(generic_permanent<graph, COST, CU> &C)
   return true;
 }
 
+/*
 bool
 is_optimal(const graph &g, vertex src, vertex dst, int ncu,
            generic_permanent<graph, COST, CU> &S)
@@ -318,6 +316,7 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
   return true;
 }
 */
+
 tuple<int, int, int, optional<cupath> >
 routing::search_dijkstra(const graph &g, const demand &d,
                          const CU &cu)
@@ -357,8 +356,8 @@ routing::search_dijkstra(const graph &g, const demand &d,
   auto op = trace(P, dst, l, t);
 
   // Make sure that all the results in S and Q are consistent.
-  // assert(is_consistent(S));
-  // assert(is_consistent(Q));
+  assert(is_consistent(S));
+  assert(is_consistent(Q));
   // Make sure that all the results in S are optimal.  We're cleaning
   // up S, but that's OK, because it's no longer needed.
   // assert(is_optimal(g, src, dst, ncu, S));

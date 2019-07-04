@@ -9,7 +9,8 @@
 // The container type for storing permanent generic labels.  A vertex
 // can have many labels or none, so we store them in a container.
 template <typename Graph, typename Cost, typename Units>
-struct generic_permanent
+struct generic_permanent:
+  std::vector<std::vector<generic_label<Graph, Cost, Units>>>
 {
   // That's the label type we're using.
   using label_t = generic_label<Graph, Cost, Units>;
@@ -17,13 +18,13 @@ struct generic_permanent
   using vd_t = std::vector<label_t>;
   // The type of the vector of vertex data.
   using vovd_t = std::vector<vd_t>;
+  // That's the base class.
+  using base = vovd_t;
+
   // The size type of the vovd_t.
   using size_type = typename vovd_t::size_type;
 
-  // The vector of single labels.
-  vovd_t m_vovd;
-
-  generic_permanent(size_type count): m_vovd(count)
+  generic_permanent(size_type count): base(count)
   {
   }
 
@@ -35,9 +36,9 @@ struct generic_permanent
     // The target vertex of the label.
     const auto &t = get_target(l);
     // Push the label back.
-    m_vovd[t].push_back(std::forward<T>(l));
+    operator[](t).push_back(std::forward<T>(l));
 
-    return m_vovd[t].back();
+    return operator[](t).back();
   }
 
   // This is a const member, because we allow the random access, but
@@ -45,7 +46,7 @@ struct generic_permanent
   const vd_t &
   operator[](size_type i) const
   {
-    return m_vovd[i];
+    return operator[](i);
   }
 };
 
