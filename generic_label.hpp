@@ -47,6 +47,9 @@ struct generic_label
 
   generic_label(generic_label &&) = default;
 
+  generic_label &
+  operator = (generic_label &&) = default;
+
   bool
   operator == (const generic_label &j) const
   {

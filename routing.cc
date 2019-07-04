@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <climits>
 #include <chrono>
+#include <iterator>
 #include <list>
 #include <map>
 #include <optional>
@@ -185,31 +186,38 @@ is_consistent(const T &C)
   return true;
 }
 
-/*
 bool
 is_optimal(const graph &g, vertex src, vertex dst, int ncu,
-           generic_permanent<graph, COST, CU> &S)
+           generic_permanent<graph, COST, CU> &P)
 {
-  // In this loop we make sure that the labels are optimal.
-  while (!S.empty())
+  while (true)
     {
-      // Find any label that we'll use to filter a Dijkstra search.
-      generic_labels<graph, COST, CU> &ls = S.begin()->second;
-      assert(!ls.empty());
-      // We want a copy, because we'll remove these units from S.
-      // These are the units that will be used in the standard
-      // Dijkstra search.
-      auto sd_units = get_units(*ls.begin());
+      // These are the units for the filtered-graph search.
+      CU sd_units;
 
+      // Find any label, so that we get a CU.
+      for(const auto &vd: P)
+        if (!vd.empty())
+          {
+            sd_units = get_units(vd.front());
+            break;
+          }
+
+      // Break the look if there are no more labels in S.
+      if (!sd_units.count())
+        break;
+      
       // -------------------------------------------------------------
       // Here we start searching for solutions with the standard
       // Dijkstra.  We filter the graph to leave only those edges that
-      // have the "sd_units" SU.
+      // have the "sd_units" CU.
 
       // The filtered graph type.
-      typedef boost::filtered_graph<graph, edge_has_units<CU> > fg_type;
-      // The solution type.
-      typedef standard_solution<fg_type, COST> sol_type;
+      using fg_type = boost::filtered_graph<graph,
+                                            edge_has_units<CU>>;
+      // The solution types.
+      using per_type = standard_permanent<fg_type, COST>;
+      using ten_type = standard_tentative<fg_type, COST>;
 
       // The edge predicate.
       edge_has_units<CU> ep(g, sd_units);
@@ -217,29 +225,30 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
       fg_type fg(g, ep);
 
       // The permanent and tentative solutions.
-      sol_type DS, DQ;
+      per_type DP(boost::num_vertices(fg));
+      ten_type DT(boost::num_vertices(fg));
       // The label we start the search with.
       standard_label<fg_type, COST> dl(0, edge(), src);
       // The object that creates labels.
       standard_label_creator<fg_type, COST> dc(fg);
       // Start the search.
-      dijkstra(fg, DS, DQ, dl, dc, graph::null_vertex());
+      dijkstra(fg, DP, DT, dl, dc, graph::null_vertex());
 
       // -------------------------------------------------------------
-      // Iterate over S (the generic Dijkstra solution), and make sure
+      // Iterate over P (the generic Dijkstra solution), and make sure
       // that the results for the "units" labels are optimal, i.e.,
       // that they match the results obtained with the stanard
       // Dijkstra.
-      for (auto si = S.begin(); si != S.end();)
+      for (auto pi = P.begin(); pi != P.end();)
         {
           // In this iteration we consider solutions for vertex v.
-          vertex v = si->first;
+          vertex v = std::distance(P.begin(), pi);
           // The labels of vertex v.
-          auto &ls = si->second;
+          auto &ls = *pi;
           assert(!ls.empty());
 
-          // The iterator to the standard Dijkstra label for vertex v.
-          const auto dsi = DS.find(v);
+          // The standard Dijkstra label for vertex v.
+          const auto &dls = DP[v];
 
           // Iterate over the labels in ls.
           for (auto li = ls.begin(); li != ls.end();)
@@ -258,9 +267,9 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
                   // Since the generic Dijkstra label has gd_units,
                   // that means the standard Dijkstra must have found
                   // a result.
-		  assert (dsi != DS.end());
+		  assert (dls);
 		  // The cost of the standard Dijkstra label.
-		  auto sd_cost = get_cost(dsi->second);
+		  auto sd_cost = get_cost(*dls);
                   // The cost of the labels should be the same.
                   assert (gd_cost == sd_cost);
                   ls.erase(li++);
@@ -275,9 +284,9 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
 		      // Since generic Dijkstra found a result for a
 		      // larger set of units, then the standard
 		      // Dijkstra must have found a result too.
-		      assert (dsi != DS.end());
+		      assert (dls);
 		      // The cost of the standard Dijkstra label.
-		      auto sd_cost = get_cost(dsi->second);
+		      auto sd_cost = get_cost(*dls);
 
 		      // If so, then the cost of the generic Dijkstra
 		      // label cannot be less than the cost found by
@@ -289,10 +298,10 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
 		  // search include the units of the generic Dijkstra
 		  // label.  The standard Dijkstra might have not
 		  // found a result, so me must check.
-		  if (sd_units.includes(gd_units) && dsi != DS.end())
+		  if (sd_units.includes(gd_units) && dls)
 		    {
 		      // The cost of the standard Dijkstra label.
-		      auto sd_cost = get_cost(dsi->second);
+		      auto sd_cost = get_cost(*dls);
 
                       // The standard Dijkstra path might be longer,
                       // because the set of units is larger.
@@ -302,18 +311,11 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
                   ++li;
                 }
             }
-
-          // Remove the set of labels if it's empty.
-          if (si->second.empty())
-            S.erase(si++);
-          else
-            ++si;
         }
     }
 
   return true;
 }
-*/
 
 tuple<int, int, int, optional<cupath> >
 routing::search_dijkstra(const graph &g, const demand &d,
@@ -358,7 +360,7 @@ routing::search_dijkstra(const graph &g, const demand &d,
   assert(is_consistent(T));
   // Make sure that all the results in S are optimal.  We're cleaning
   // up S, but that's OK, because it's no longer needed.
-  // assert(is_optimal(g, src, dst, ncu, S));
+  assert(is_optimal(g, src, dst, ncu, P));
 
   // The number of costs, the number of edges, and the number of CUs
   // (units) equals to the number of labels, because a label has one
