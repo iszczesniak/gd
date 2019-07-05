@@ -6,8 +6,8 @@ traffic.o
 
 # CXXFLAGS := $(CXXFLAGS) -g
 # CXXFLAGS := $(CXXFLAGS) -pg --no-pie
-CXXFLAGS := $(CXXFLAGS) -O3 -D NDEBUG
 # CXXFLAGS := $(CXXFLAGS) -O3
+CXXFLAGS := $(CXXFLAGS) -O3 -D NDEBUG
 
 CXXFLAGS := $(CXXFLAGS) -std=c++17
 CXXFLAGS := $(CXXFLAGS) -I des/include
