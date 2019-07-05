@@ -22,8 +22,7 @@ BOOST_AUTO_TEST_CASE(cli_args_test_1)
                         "--mht", "2",
                         "--mnu", "5",
                         "--st", "first",
-                        "--mlc", "2",
-                        "--population", "blablabla"};
+                         "--population", "blablabla"};
 
   int argc = sizeof(argv) / sizeof(char *);
 
@@ -35,7 +34,6 @@ BOOST_AUTO_TEST_CASE(cli_args_test_1)
 
   BOOST_CHECK(args.net == "filename");
   BOOST_CHECK(args.units == 50);
-  BOOST_CHECK(args.mlc.value() == 2);
   BOOST_CHECK(routing::get_st() == routing::st_t::first);
   
   BOOST_CHECK_CLOSE(args.ol, 1, 0.0001);

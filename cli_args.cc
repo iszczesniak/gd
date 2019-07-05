@@ -13,7 +13,6 @@
 
 // Option strings.
 #define K_S "K"
-#define MLC_S "mlc"
 #define NET_S "net"
 #define ST_S "st"
 #define POPULATION_S "population"
@@ -44,9 +43,6 @@ process_cli_args(int argc, const char *argv[])
 
         ("units", po::value<int>()->required(),
          "the number of units")
-
-        (MLC_S, po::value<float>(),
-         "the maximal length cofficient of a path")
 
         (K_S, po::value<int>(),
          "the K for the k-shortest paths")
@@ -99,9 +95,6 @@ process_cli_args(int argc, const char *argv[])
       result.net = vm[NET_S].as<string>();
 
       result.units = vm["units"].as<int>();
-
-      if (vm.count(MLC_S))
-        result.mlc = vm[MLC_S].as<float>();
 
       if (vm.count(K_S))
         result.K = vm[K_S].as<int>();

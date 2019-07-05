@@ -1,0 +1,25 @@
+graph G {
+v01;
+v02;
+v03;
+v04;
+v05;
+v06;
+v07;
+v08;
+v09;
+v10;
+v01--v03  [weight=69];
+v01--v04  [weight=26];
+v02--v07  [weight=156];
+v02--v04  [weight=106];
+v03--v06  [weight=108];
+v04--v05  [weight=29];
+v05--v06  [weight=82];
+v05--v07  [weight=135];
+v06--v07  [weight=145];
+v06--v08  [weight=87];
+v07--v10  [weight=164];
+v08--v09  [weight=104];
+v09--v10  [weight=20];
+}

@@ -1,5 +1,5 @@
-#ifndef GENERAL_TRACER_HPP
-#define GENERAL_TRACER_HPP
+#ifndef GENERIC_TRACER_HPP
+#define GENERIC_TRACER_HPP
 
 #include "adaptive_units.hpp"
 #include "graph.hpp"
@@ -17,12 +17,16 @@ template <typename Label>
 auto
 get_edge(const Label &);
 
-template <typename Graph, typename Path, typename Solution,
+template <typename Graph, typename Path, typename Permanent,
           typename Units>
-class generic_tracer
+struct generic_tracer
 {
-  using Labels = typename Solution::mapped_type;
-  using Label = typename Labels::value_type;
+  // That's the label type we're using.
+  using label_t = typename Permanent::label_t;
+  // The type of vertex data.
+  using vd_t = typename Permanent::vd_t;
+  // The path type.  The trace function needs it.
+  using path_t = Path;
 
   // The graph.
   const Graph &m_g;
@@ -33,9 +37,6 @@ class generic_tracer
   // The units of the path.
   Units m_units;
 
-public:
-  using path_type = Path;
-
   generic_tracer(const Graph &g, int ncu):
     m_g(g), m_ncu(ncu), m_units()
   {
@@ -44,30 +45,31 @@ public:
   /**
    * Initialize the tracing.
    */
-  typename Labels::const_iterator
-  init(Path &p, typename Solution::const_iterator i)
+  auto
+  init(path_t &p, const vd_t &ls)
   {
     // Make sure there is at least one label.
-    assert(!i->second.empty());
-    // This is the label.
-    const Label &l = *i->second.begin();
+    assert(!std::empty(ls));
+    // We just take the first label.
+    const auto &l = ls.front();
     // Get the number of units required.
     int units = adaptive_units<COST>::units(m_ncu, get_cost(l));
     // Get the CU for the path.
     p.first = m_units = {routing::select_cu(get_units(l), units)};
-    return i->second.begin();
+    // Return the iterator to the first (and the only) label.
+    return ls.begin();
   }
 
   /**
    * Push the label to the path.
    */
   void
-  push(Path &p, typename Labels::const_iterator &li)
+  push(path_t &p, typename vd_t::const_iterator li)
   {
     // This is the label we process.
-    const Label &l = *li;
+    const auto &l = *li;
     // The edge of the label.
-    const Edge<Graph> &e = get_edge(l);
+    const auto &e = get_edge(l);
     // Add the label's edge to the path.
     p.second.push_front(e);
   }
@@ -77,24 +79,23 @@ public:
    * require this is not the starting label.  The objective is to find
    * the previous label on the path.
    */
-  typename Labels::const_iterator
-  advance(const Solution &S, typename Labels::const_iterator li)
+  auto
+  advance(const Permanent &P, typename vd_t::const_iterator li)
   {
     // This is the label we process.
-    const Label &l = *li;
+    const auto &l = *li;
     // The cost of the label.
     const auto &c = get_cost(l);
     // This is the edge of the label.
-    const Edge<Graph> &e = get_edge(l);
+    const auto &e = get_edge(l);
     // The edge cost.
     auto ec = boost::get(boost::edge_weight, m_g, e);
     // The edge source.
-    Vertex<Graph> s = boost::source(e, m_g);
+    const auto &s = boost::source(e, m_g);
 
     // Find the labels at node s.
-    auto i = S.find(s);
-    assert(i != S.end());
-    const auto &ls = i->second;
+    const auto &ls = P[s];
+    assert(!ls.empty());
 
     // We look for a preceeding label at node s.  The loop condition
     // is true, because the loop should always be terminated by the
@@ -121,4 +122,4 @@ public:
   }
 };
 
-#endif // GENERAL_TRACER_HPP
+#endif // GENERIC_TRACER_HPP

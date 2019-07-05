@@ -1,34 +1,32 @@
 #ifndef ACCOUNTED_SOLUTION_HPP
 #define ACCOUNTED_SOLUTION_HPP
 
+#include <utility>
+
 // The accounted container type for storing both permanent and
 // tentative labels.
 template <typename Solution, typename Accountant>
 struct accounted_solution: public Solution
 {
-  using label_type = typename Solution::label_type;
+  using label_t = typename Solution::label_t;
+  using size_type = typename Solution::size_type;
 
   Accountant &m_acc;
 
-  accounted_solution(Accountant &acc): m_acc(acc)
+  accounted_solution(Accountant &acc, size_type count):
+    m_acc(acc), Solution(count)
   {
   }
 
+  template <typename T>
   void
-  push(const label_type &l)
+  push(T &&l)
   {
     ++m_acc;
-    Solution::push(l);
+    Solution::push(std::forward<T>(l));
   }
 
-  auto
-  insert(typename Solution::node_type &&nh)
-  {
-    ++m_acc;
-    return Solution::insert(std::move(nh));
-  }
-
-  auto
+  label_t
   pop()
   {
     --m_acc;

@@ -12,7 +12,8 @@
 #include "generic_dijkstra.hpp"
 #include "generic_label_creator.hpp"
 #include "generic_label.hpp"
-#include "generic_solution.hpp"
+#include "generic_permanent.hpp"
+#include "generic_tentative.hpp"
 #include "generic_tracer.hpp"
 #include "graph.hpp"
 #include "stats.hpp"
@@ -20,7 +21,8 @@
 #include "standard_constrained_label_creator.hpp"
 #include "standard_label_creator.hpp"
 #include "standard_label.hpp"
-#include "standard_solution.hpp"
+#include "standard_permanent.hpp"
+#include "standard_tentative.hpp"
 #include "standard_tracer.hpp"
 #include "yen_ksp.hpp"
 #include "utils.hpp"
@@ -30,6 +32,7 @@
 #include <algorithm>
 #include <climits>
 #include <chrono>
+#include <iterator>
 #include <list>
 #include <map>
 #include <optional>
@@ -42,8 +45,6 @@ routing::st_t routing::m_st = routing::st_t::none;
 
 // Another routing algorithms to use.
 set<routing::rt_t> routing::m_aras;
-
-optional<COST> routing::m_ml;
 
 optional<unsigned> routing::m_K;
 
@@ -79,10 +80,14 @@ routing::set_up(graph &g, const demand &d, const CU &cu)
       auto ar = search(g, d, cu, ara);
 
       if (!(!dr && !ar ||
-            dr.value().first == ar.value().first &&
+            dr.value().first.count() == ar.value().first.count() &&
             get_path_cost(g, dr.value().second) ==
             get_path_cost(g, ar.value().second)))
-        abort();
+        {
+          cout << "dr = " << dr.value() << endl
+               << "ar = " << ar.value() << endl;
+          abort();
+        }
     }
 
   if (dr)
@@ -156,15 +161,13 @@ struct edge_has_units
   }
 };
 
+template <typename T>
 bool
-is_consistent(generic_solution<graph, COST, CU> &C)
+is_consistent(const T &C)
 {
-  // In this loop we make sure that the labels are consistent.
-  for(auto const &c: C)
+  // In this loop we make sure that the labels ls are consistent.
+  for(auto const &ls: C)
     {
-      // These are the labels we examine.
-      const generic_labels<graph, COST, CU> ls = c.second;
-
       // Make sure that the cost of the labels do not decrease.
       if (auto i = ls.begin(); i != ls.end())
         for (auto p = i; ++i != ls.end(); ++p)
@@ -183,128 +186,112 @@ is_consistent(generic_solution<graph, COST, CU> &C)
   return true;
 }
 
+CU
+find_me_cu(const generic_permanent<graph, COST, CU> &P)
+{
+  // Find any label, so that we get a CU.
+  for(const auto &vd: P)
+    if (!vd.empty())
+      return get_units(vd.front());
+
+  return CU();
+}
+
 bool
 is_optimal(const graph &g, vertex src, vertex dst, int ncu,
-           generic_solution<graph, COST, CU> &S)
+           generic_permanent<graph, COST, CU> &P)
 {
-  // In this loop we make sure that the labels are optimal.
-  while (!S.empty())
+  // These are the units for the filtered-graph search.
+  while (CU fg_units = find_me_cu(P))
     {
-      // Find any label that we'll use to filter a Dijkstra search.
-      generic_labels<graph, COST, CU> &ls = S.begin()->second;
-      assert(!ls.empty());
-      // We want a copy, because we'll remove these units from S.
-      // These are the units that will be used in the standard
-      // Dijkstra search.
-      auto sd_units = get_units(*ls.begin());
-
-      // -------------------------------------------------------------
       // Here we start searching for solutions with the standard
       // Dijkstra.  We filter the graph to leave only those edges that
-      // have the "sd_units" SU.
+      // have the "fg_units" CU.
 
       // The filtered graph type.
-      typedef boost::filtered_graph<graph, edge_has_units<CU> > fg_type;
-      // The solution type.
-      typedef standard_solution<fg_type, COST> sol_type;
+      using fg_type = boost::filtered_graph<graph,
+                                            edge_has_units<CU>>;
+      // The solution types.
+      using per_type = standard_permanent<fg_type, COST>;
+      using ten_type = standard_tentative<fg_type, COST>;
 
       // The edge predicate.
-      edge_has_units<CU> ep(g, sd_units);
+      edge_has_units<CU> ep(g, fg_units);
       // The filtered graph.
       fg_type fg(g, ep);
 
       // The permanent and tentative solutions.
-      sol_type DS, DQ;
+      per_type FGP(boost::num_vertices(fg));
+      ten_type FGT(boost::num_vertices(fg));
+
       // The label we start the search with.
-      standard_label<fg_type, COST> dl(0, edge(), src);
+      standard_label<fg_type, COST> fgl(0, edge(), src);
+      // The reach of that modulation.
+      COST r = adaptive_units<COST>::reach(ncu, fg_units.count());
       // The object that creates labels.
-      standard_label_creator<fg_type, COST> dc(fg);
-      // Start the search.
-      dijkstra(fg, DS, DQ, dl, dc, graph::null_vertex());
+      standard_constrained_label_creator<fg_type, COST> fgc(fg, r);
+      // Build the complete SPT.
+      dijkstra(fg, FGP, FGT, fgl, fgc, graph::null_vertex());
 
       // -------------------------------------------------------------
-      // Iterate over S (the generic Dijkstra solution), and make sure
-      // that the results for the "units" labels are optimal, i.e.,
-      // that they match the results obtained with the stanard
-      // Dijkstra.
-      for (auto si = S.begin(); si != S.end();)
+      // We're sure that in FGP (the standard Dijkstra solution) there
+      // are only the optimal solutions.  These results are the subset
+      // of the results of the generic Dijkstra in P.
+      for (auto pi = FGP.begin(); pi != FGP.end(); ++pi)
         {
-          // In this iteration we consider solutions for vertex v.
-          vertex v = si->first;
-          // The labels of vertex v.
-          auto &ls = si->second;
-          assert(!ls.empty());
-
-          // The iterator to the standard Dijkstra label for vertex v.
-          const auto dsi = DS.find(v);
-
-          // Iterate over the labels in ls.
-          for (auto li = ls.begin(); li != ls.end();)
+          // Is there a solution at pi?
+          if (*pi)
             {
-              // The generic Dijkstra label for vertex v.
-              const auto &gd_label = *li;
-              // The cost of the generic Dijkstra label.
-              const auto gd_cost = get_cost(gd_label);
-              // The units of the generic Dijkstra label.
-              const auto &gd_units = get_units(gd_label);
+              // Now we know that there exists a shortest path from
+              // vertex src to vertex v with fg_units units and
+              // fg_cost cost.  This is certain.
 
-              // We get interested in this generic Dijkstra label only
-              // when its units exactly match the "units".
-              if (gd_units == sd_units)
+              // This solution is for vertex v.
+              vertex v = std::distance(FGP.begin(), pi);
+              // The cost of reaching vertex v is fg_cost.
+              auto fg_cost = get_cost(**pi);
+
+              // Now we look what we've got from the generic Dijkstra
+              // for node v.
+              auto &ls = P[v];
+
+              // Even though the filtered-graph found a solution, ls
+              // might be empty now, because ls had a more general
+              // solution (i.e., one that had a CU which included
+              // fg_units), and that solution was already removed in a
+              // previous interation.
+              if (!ls.empty())
                 {
-                  // Since the generic Dijkstra label has gd_units,
-                  // that means the standard Dijkstra must have found
-                  // a result.
-		  assert (dsi != DS.end());
-		  // The cost of the standard Dijkstra label.
-		  auto sd_cost = get_cost(dsi->second);
-                  // The cost of the labels should be the same.
-                  assert (gd_cost == sd_cost);
-                  ls.erase(li++);
-                }
-              else
-                {
-                  // Check whether the units of the generic Dijkstra
-                  // search include the units of the standard Dijkstra
-                  // label.
-                  if (gd_units.includes(sd_units))
-		    {
-		      // Since generic Dijkstra found a result for a
-		      // larger set of units, then the standard
-		      // Dijkstra must have found a result too.
-		      assert (dsi != DS.end());
-		      // The cost of the standard Dijkstra label.
-		      auto sd_cost = get_cost(dsi->second);
+                  // Iterate over the generic labels in ls.
+                  for (auto li = ls.begin(); li != ls.end();)
+                    {
+                      // The generic Dijkstra label for vertex v.
+                      const auto &gd_label = *li;
+                      // The cost of the generic Dijkstra label.
+                      const auto gd_cost = get_cost(gd_label);
+                      // The units of the generic Dijkstra label.
+                      const auto &gd_units = get_units(gd_label);
 
-		      // If so, then the cost of the generic Dijkstra
-		      // label cannot be less than the cost found by
-		      // the standard Dijkstra.
-		      assert(gd_cost >= sd_cost);
-		    }
+                      if (gd_units == fg_units)
+                        {
+                          // Bingo! The costs must be the same,
+                          // because the units are the same.  We found
+                          // the same path with two algorithms.
+                          assert (gd_cost == fg_cost);
+                          ls.erase(li);
+                        }
+                      else
+                        {
+                          if (gd_units.includes(fg_units))
+                            assert(gd_cost >= fg_cost);
+                          else if (fg_units.includes(gd_units))
+                            assert(fg_cost >= gd_cost);
 
-		  // Check whether the units of the standard Dijkstra
-		  // search include the units of the generic Dijkstra
-		  // label.  The standard Dijkstra might have not
-		  // found a result, so me must check.
-		  if (sd_units.includes(gd_units) && dsi != DS.end())
-		    {
-		      // The cost of the standard Dijkstra label.
-		      auto sd_cost = get_cost(dsi->second);
-
-                      // The standard Dijkstra path might be longer,
-                      // because the set of units is larger.
-		      assert(sd_cost >= gd_cost);
-		    }
-
-                  ++li;
+                          ++li;
+                        }
+                    }
                 }
             }
-
-          // Remove the set of labels if it's empty.
-          if (si->second.empty())
-            S.erase(si++);
-          else
-            ++si;
         }
     }
 
@@ -323,33 +310,38 @@ routing::search_dijkstra(const graph &g, const demand &d,
   assert (src != dst);
 
   // The accountant type.
-  typedef accountant<std::size_t> acc_type;
-  // The solution type.
-  typedef generic_solution<graph, COST, CU> sol_type;
-  // The accounted solution type.
-  typedef accounted_solution<sol_type, acc_type> acc_sol_type;
+  using acc_type = accountant<std::size_t>;
+  // The generic permanent solution type.
+  using per_type = generic_permanent<graph, COST, CU>;
+  // The generic tentative solution type.
+  using ten_type = generic_tentative<graph, COST, CU>;
+  // The accounted generic permanent solution type.
+  using acc_per_type = accounted_solution<per_type, acc_type>;
+  // The accounted generic tentative solution type.
+  using acc_ten_type = accounted_solution<ten_type, acc_type>;
 
   // The accountant finds the maximal number of labels used.
   acc_type acc;
   // The permanent and tentative solutions.
-  acc_sol_type S(acc), Q(acc);
+  acc_per_type P(acc, boost::num_vertices(g));
+  acc_ten_type T(acc, boost::num_vertices(g));
   // The label we start the search with.
   generic_label<graph, COST, CU> l(0, CU(cu), edge(), src);
   // The creator of the labels.
-  generic_label_creator<graph, COST, CU> c(g, ncu, m_ml);
+  generic_label_creator<graph, COST, CU> c(g, ncu);
   // Run the search.
-  dijkstra(g, S, Q, l, c, dst);
+  dijkstra(g, P, T, l, c, dst);
   // The tracer.
-  generic_tracer<graph, cupath, sol_type, CU> t(g, ncu);
+  generic_tracer<graph, cupath, acc_per_type, CU> t(g, ncu);
   // Get the path.
-  auto op = trace(S, dst, l, t);
+  auto op = trace(P, dst, l, t);
 
   // Make sure that all the results in S and Q are consistent.
-  assert(is_consistent(S));
-  assert(is_consistent(Q));
+  assert(is_consistent(P));
+  assert(is_consistent(T));
   // Make sure that all the results in S are optimal.  We're cleaning
   // up S, but that's OK, because it's no longer needed.
-  assert(is_optimal(g, src, dst, ncu, S));
+  assert(is_optimal(g, src, dst, ncu, P));
 
   // The number of costs, the number of edges, and the number of CUs
   // (units) equals to the number of labels, because a label has one
@@ -373,15 +365,6 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
 
   set<int> ncus = adaptive_units<COST>::ncus(min_units);
 
-  // The filtered graph type.
-  typedef boost::filtered_graph<graph, edge_has_units<CU> > fg_type;
-  // The accountant type.
-  typedef accountant<std::size_t> acc_type;
-  // The solution type.
-  typedef standard_solution<fg_type, COST> sol_type;
-  // The accounted solution type.
-  typedef accounted_solution<sol_type, acc_type> acc_sol_type;
-
   // Here we store the result.
   optional<cupath> result;
 
@@ -396,12 +379,31 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
       for (const CU &cu: slots)
         {
           edge_has_units<CU> ep(g, cu);
+
+          // The filtered graph type.
+          using fg_type = boost::filtered_graph<graph,
+                                                edge_has_units<CU> >;
+
+          // The filtered graph.
           fg_type fg(g, ep);
+
+          // The accountant type.
+          using acc_type = accountant<std::size_t>;
+
+          // The standard permanent solution type.
+          using per_type = standard_permanent<fg_type, COST>;
+          // The standard tentative solution type.
+          using ten_type = standard_tentative<fg_type, COST>;
+          // The accounted standard permanent solution type.
+          using acc_per_type = accounted_solution<per_type, acc_type>;
+          // The accounted standard tentative solution type.
+          using acc_ten_type = accounted_solution<ten_type, acc_type>;
 
           // Standard accountant.
           acc_type acc;
-          // The permanent and tentative solutions.
-          acc_sol_type S(acc), Q(acc);
+          acc_per_type P(acc, boost::num_vertices(fg));
+          acc_ten_type T(acc, boost::num_vertices(fg));
+
           // The label we start the search with.
           standard_label<fg_type, COST> l(0, edge(), src);
           // The reach of that modulation.
@@ -409,10 +411,10 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
           // The object that creates labels.
           standard_constrained_label_creator<fg_type, COST> c(fg, r);
           // Start the search.
-          dijkstra(fg, S, Q, l, c, dst);
+          dijkstra(fg, P, T, l, c, dst);
           // The standard tracer.
-          standard_tracer<fg_type, path, sol_type> t(fg);
-          auto op = trace(S, dst, l, t);
+          standard_tracer<fg_type, acc_per_type, path> t(fg);
+          auto op = trace(P, dst, l, t);
 
           if (op && (!result ||
                      get_path_cost(g, op.value()) <
@@ -623,10 +625,6 @@ routing::search_puyenksp(const graph &g, const demand &d, const CU &cu)
       // The cost of the path.
       COST c = get_path_cost(g, r.second);
 
-      // Stop the search when the cost is greater than needed.
-      if (m_ml && c > m_ml.value())
-        break;
-
       // This is the path SU.
       SU psu = find_path_su(g, r.second);
       // This is the candidate SU.
@@ -674,18 +672,6 @@ routing::st_interpret (const string &st)
    {"fittest", routing::st_t::fittest},
    {"random", routing::st_t::random}};
   return interpret ("spectrum selection type", st, st_map);
-}
-
-void
-routing::set_ml(optional<COST> ml)
-{
-  m_ml = ml;
-}
-
-optional<COST>
-routing::get_ml()
-{
-  return m_ml;
 }
 
 void
