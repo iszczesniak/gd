@@ -12,9 +12,6 @@ simulate(const cli_args &args_para)
 {
   cli_args args = args_para;
 
-  // Set the maximal length of a path.
-  routing::set_ml(args.ml);
-
   // Set the K for the k-shortest paths.
   routing::set_K(args.K);
 
@@ -55,15 +52,11 @@ simulate(const cli_args &args_para)
   args.mcat = calc_mcat(g, ba::mean(hop_acc), args.mht,
                         args.mnu, args.ol);
 
-  // Calculate the maximal length of a path.
-  if (args.mlc)
-    args.ml = args.mlc.value() * ba::max(len_acc);
-
   // The stats kickoff time.
-  args.kickoff = 0;
+  args.kickoff = 2 * args.mht;
 
   // The simulation time limit.
-  args.sim_time = 10 * args.mht;
+  args.sim_time = 12 * args.mht;
 
   // The traffic module.
   traffic t(args.mcat, args.mht, args.mnu);
