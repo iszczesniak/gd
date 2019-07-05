@@ -237,7 +237,7 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
       // We're sure that in FGP (the standard Dijkstra solution) there
       // are only the optimal solutions.  These results are the subset
       // of the results of the generic Dijkstra in P.
-      for (auto pi = FGP.begin(); pi != FGP.end();)
+      for (auto pi = FGP.begin(); pi != FGP.end(); ++pi)
         {
           // Is there a solution at pi?
           if (*pi)
@@ -254,36 +254,41 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
               // Now we look what we've got from the generic Dijkstra
               // for node v.
               auto &ls = P[v];
-              // There must at least one label, because the
-              // filtered-graph search found a solution.
-              assert(!ls.empty());
 
-              // Iterate over the generic labels in ls.
-              for (auto li = ls.begin(); li != ls.end();)
+              // Even though the filtered-graph found a solution, ls
+              // might be empty now, because ls had a more general
+              // solution (i.e., one that had a CU which included
+              // fg_units), and that solution was already removed in a
+              // previous interation.
+              if (!ls.empty())
                 {
-                  // The generic Dijkstra label for vertex v.
-                  const auto &gd_label = *li;
-                  // The cost of the generic Dijkstra label.
-                  const auto gd_cost = get_cost(gd_label);
-                  // The units of the generic Dijkstra label.
-                  const auto &gd_units = get_units(gd_label);
-
-                  if (gd_units == fg_units)
+                  // Iterate over the generic labels in ls.
+                  for (auto li = ls.begin(); li != ls.end();)
                     {
-                      // Bingo! The costs must be the same, because
-                      // the units are the same.  We found the same
-                      // path with two algorithms.
-                      assert (gd_cost == fg_cost);
-                      ls.erase(li++);
-                    }
-                  else
-                    {
-                      if (gd_units.includes(fg_units))
-                        assert(gd_cost >= fg_cost);
-                      else if (fg_units.includes(gd_units))
-                        assert(fg_cost >= gd_cost);
+                      // The generic Dijkstra label for vertex v.
+                      const auto &gd_label = *li;
+                      // The cost of the generic Dijkstra label.
+                      const auto gd_cost = get_cost(gd_label);
+                      // The units of the generic Dijkstra label.
+                      const auto &gd_units = get_units(gd_label);
 
-                      ++li;
+                      if (gd_units == fg_units)
+                        {
+                          // Bingo! The costs must be the same,
+                          // because the units are the same.  We found
+                          // the same path with two algorithms.
+                          assert (gd_cost == fg_cost);
+                          ls.erase(li);
+                        }
+                      else
+                        {
+                          if (gd_units.includes(fg_units))
+                            assert(gd_cost >= fg_cost);
+                          else if (fg_units.includes(gd_units))
+                            assert(fg_cost >= gd_cost);
+
+                          ++li;
+                        }
                     }
                 }
             }
