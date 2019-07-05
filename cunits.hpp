@@ -45,6 +45,17 @@ public:
   }
 
   bool
+  empty() const
+  {
+    return !count();
+  }
+
+  operator bool() const
+  {
+    return !empty();
+  }
+
+  bool
   operator < (const self &a) const
   {
     return m_min != a.m_min ? m_min < a.m_min : m_max < a.m_max;

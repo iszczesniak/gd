@@ -34,9 +34,9 @@ struct generic_permanent:
     // The target vertex of the label.
     const auto &t = get_target(l);
     // Push the label back.
-    this->operator[](t).push_back(std::forward<T>(l));
+    base::operator[](t).push_back(std::forward<T>(l));
 
-    return this->operator[](t).back();
+    return base::operator[](t).back();
   }
 };
 

@@ -13,19 +13,17 @@
 // For each vertex we store a shared_ptr to the label, because we
 // create a weak_ptr in the priority queue.
 template <typename Graph, typename Cost>
-struct standard_tentative
+struct standard_tentative:
+  std::vector<std::shared_ptr<standard_label<Graph, Cost>>>
 {
   // That's the label type we're using.
   using label_t = standard_label<Graph, Cost>;
   // The type of data a vertex has.
   using vd_t = std::shared_ptr<label_t>;
   // The type of the vector of vertex data.
-  using vovd_t = std::vector<vd_t>;
+  using base = std::vector<vd_t>;
   // The size type of the vovd_t.
-  using size_type = typename vovd_t::size_type;
-
-  // The vector of vertex data.
-  vovd_t m_vovd;
+  using size_type = typename base::size_type;
 
   // The priority queue element type.
   using pqet = std::pair<Cost, std::weak_ptr<label_t>>;
@@ -37,7 +35,7 @@ struct standard_tentative
     m_pq{[](const auto &a, const auto &b)
       {return ! (a.first < b.first);}};
 
-  standard_tentative(size_type count): m_vovd(count)
+  standard_tentative(size_type count): base(count)
   {
   }
 
@@ -49,11 +47,11 @@ struct standard_tentative
     // The target vertex of the label.
     const auto &t = get_target(l);
     // There should be no label for vertex t.
-    assert(!m_vovd[t]);
+    assert(!base::operator[](t));
     // Make a shared_ptr.
-    m_vovd[t] = std::make_shared<label_t>(l);
+    base::operator[](t) = std::make_shared<label_t>(l);
     // Push the weak_ptr for the label into the priority queue.
-    m_pq.push({get_cost(l), m_vovd[t]});
+    m_pq.push({get_cost(l), base::operator[](t)});
   }
 
   bool
@@ -85,27 +83,11 @@ struct standard_tentative
     // This is the label we return.
     const auto l = std::move(*sp);
     // Make sure we've got the label in the right place.
-    assert(m_vovd[get_target(l)]);
+    assert(base::operator[](get_target(l)));
     // We remove the label from the vector.
-    m_vovd[get_target(l)].reset();
+    base::operator[](get_target(l)).reset();
 
     return l;
-  }
-
-  // This is a const member, because we allow the random access, but
-  // disallow the modification of the element.
-  const vd_t &
-  operator[](size_type i) const
-  {
-    return m_vovd[i];
-  }
-
-  // This operator returns a reference to the vertex data, which we
-  // can modify.
-  vd_t &
-  operator[](size_type i)
-  {
-    return m_vovd[i];
   }
 };
 

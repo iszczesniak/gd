@@ -186,31 +186,27 @@ is_consistent(const T &C)
   return true;
 }
 
+CU
+find_me_cu(const generic_permanent<graph, COST, CU> &P)
+{
+  // Find any label, so that we get a CU.
+  for(const auto &vd: P)
+    if (!vd.empty())
+      return get_units(vd.front());
+
+  return CU();
+}
+
 bool
 is_optimal(const graph &g, vertex src, vertex dst, int ncu,
            generic_permanent<graph, COST, CU> &P)
 {
-  while (true)
+  // These are the units for the filtered-graph search.
+  while (CU fg_units = find_me_cu(P))
     {
-      // These are the units for the filtered-graph search.
-      CU sd_units;
-
-      // Find any label, so that we get a CU.
-      for(const auto &vd: P)
-        if (!vd.empty())
-          {
-            sd_units = get_units(vd.front());
-            break;
-          }
-
-      // Break the look if there are no more labels in S.
-      if (!sd_units.count())
-        break;
-      
-      // -------------------------------------------------------------
       // Here we start searching for solutions with the standard
       // Dijkstra.  We filter the graph to leave only those edges that
-      // have the "sd_units" CU.
+      // have the "fg_units" CU.
 
       // The filtered graph type.
       using fg_type = boost::filtered_graph<graph,
@@ -220,95 +216,75 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
       using ten_type = standard_tentative<fg_type, COST>;
 
       // The edge predicate.
-      edge_has_units<CU> ep(g, sd_units);
+      edge_has_units<CU> ep(g, fg_units);
       // The filtered graph.
       fg_type fg(g, ep);
 
       // The permanent and tentative solutions.
-      per_type DP(boost::num_vertices(fg));
-      ten_type DT(boost::num_vertices(fg));
+      per_type FGP(boost::num_vertices(fg));
+      ten_type FGT(boost::num_vertices(fg));
+
       // The label we start the search with.
-      standard_label<fg_type, COST> dl(0, edge(), src);
+      standard_label<fg_type, COST> fgl(0, edge(), src);
+      // The reach of that modulation.
+      COST r = adaptive_units<COST>::reach(ncu, fg_units.count());
       // The object that creates labels.
-      standard_label_creator<fg_type, COST> dc(fg);
-      // Start the search.
-      dijkstra(fg, DP, DT, dl, dc, graph::null_vertex());
+      standard_constrained_label_creator<fg_type, COST> fgc(fg, r);
+      // Build the complete SPT.
+      dijkstra(fg, FGP, FGT, fgl, fgc, graph::null_vertex());
 
       // -------------------------------------------------------------
-      // Iterate over P (the generic Dijkstra solution), and make sure
-      // that the results for the "units" labels are optimal, i.e.,
-      // that they match the results obtained with the stanard
-      // Dijkstra.
-      for (auto pi = P.begin(); pi != P.end();)
+      // We're sure that in FGP (the standard Dijkstra solution) there
+      // are only the optimal solutions.  These results are the subset
+      // of the results of the generic Dijkstra in P.
+      for (auto pi = FGP.begin(); pi != FGP.end();)
         {
-          // In this iteration we consider solutions for vertex v.
-          vertex v = std::distance(P.begin(), pi);
-          // The labels of vertex v.
-          auto &ls = *pi;
-          assert(!ls.empty());
-
-          // The standard Dijkstra label for vertex v.
-          const auto &dls = DP[v];
-
-          // Iterate over the labels in ls.
-          for (auto li = ls.begin(); li != ls.end();)
+          // Is there a solution at pi?
+          if (*pi)
             {
-              // The generic Dijkstra label for vertex v.
-              const auto &gd_label = *li;
-              // The cost of the generic Dijkstra label.
-              const auto gd_cost = get_cost(gd_label);
-              // The units of the generic Dijkstra label.
-              const auto &gd_units = get_units(gd_label);
+              // Now we know that there exists a shortest path from
+              // vertex src to vertex v with fg_units units and
+              // fg_cost cost.  This is certain.
 
-              // We get interested in this generic Dijkstra label only
-              // when its units exactly match the "units".
-              if (gd_units == sd_units)
+              // This solution is for vertex v.
+              vertex v = std::distance(FGP.begin(), pi);
+              // The cost of reaching vertex v is fg_cost.
+              auto fg_cost = get_cost(**pi);
+
+              // Now we look what we've got from the generic Dijkstra
+              // for node v.
+              auto &ls = P[v];
+              // There must at least one label, because the
+              // filtered-graph search found a solution.
+              assert(!ls.empty());
+
+              // Iterate over the generic labels in ls.
+              for (auto li = ls.begin(); li != ls.end();)
                 {
-                  // Since the generic Dijkstra label has gd_units,
-                  // that means the standard Dijkstra must have found
-                  // a result.
-		  assert (dls);
-		  // The cost of the standard Dijkstra label.
-		  auto sd_cost = get_cost(*dls);
-                  // The cost of the labels should be the same.
-                  assert (gd_cost == sd_cost);
-                  ls.erase(li++);
-                }
-              else
-                {
-                  // Check whether the units of the generic Dijkstra
-                  // search include the units of the standard Dijkstra
-                  // label.
-                  if (gd_units.includes(sd_units))
-		    {
-		      // Since generic Dijkstra found a result for a
-		      // larger set of units, then the standard
-		      // Dijkstra must have found a result too.
-		      assert (dls);
-		      // The cost of the standard Dijkstra label.
-		      auto sd_cost = get_cost(*dls);
+                  // The generic Dijkstra label for vertex v.
+                  const auto &gd_label = *li;
+                  // The cost of the generic Dijkstra label.
+                  const auto gd_cost = get_cost(gd_label);
+                  // The units of the generic Dijkstra label.
+                  const auto &gd_units = get_units(gd_label);
 
-		      // If so, then the cost of the generic Dijkstra
-		      // label cannot be less than the cost found by
-		      // the standard Dijkstra.
-		      assert(gd_cost >= sd_cost);
-		    }
+                  if (gd_units == fg_units)
+                    {
+                      // Bingo! The costs must be the same, because
+                      // the units are the same.  We found the same
+                      // path with two algorithms.
+                      assert (gd_cost == fg_cost);
+                      ls.erase(li++);
+                    }
+                  else
+                    {
+                      if (gd_units.includes(fg_units))
+                        assert(gd_cost >= fg_cost);
+                      else if (fg_units.includes(gd_units))
+                        assert(fg_cost >= gd_cost);
 
-		  // Check whether the units of the standard Dijkstra
-		  // search include the units of the generic Dijkstra
-		  // label.  The standard Dijkstra might have not
-		  // found a result, so me must check.
-		  if (sd_units.includes(gd_units) && dls)
-		    {
-		      // The cost of the standard Dijkstra label.
-		      auto sd_cost = get_cost(*dls);
-
-                      // The standard Dijkstra path might be longer,
-                      // because the set of units is larger.
-		      assert(sd_cost >= gd_cost);
-		    }
-
-                  ++li;
+                      ++li;
+                    }
                 }
             }
         }

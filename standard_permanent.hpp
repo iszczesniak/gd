@@ -29,21 +29,19 @@ struct myoptional: public std::optional<T>
 // stores its value inside, and so the labels are allocated in-place
 // and not in a remote part.
 template <typename Graph, typename Cost>
-struct standard_permanent
+struct standard_permanent:
+  std::vector<myoptional<standard_label<Graph, Cost>>>
 {
   // That's the label type we're using.
   using label_t = standard_label<Graph, Cost>;
   // The type of data a vertex has.
   using vd_t = myoptional<label_t>;
   // The type of the vector of vertex data.
-  using vovd_t = std::vector<vd_t>;
+  using base = std::vector<vd_t>;
   // The size type of the vovd_t.
-  using size_type = typename vovd_t::size_type;
+  using size_type = typename base::size_type;
 
-  // The vector of vertex data.
-  vovd_t m_vovd;
-
-  standard_permanent(size_type count): m_vovd(count)
+  standard_permanent(size_type count): base(count)
   {
   }
 
@@ -55,19 +53,11 @@ struct standard_permanent
     // The target vertex of the label.
     const auto &t = get_target(l);
     // There should be no label for vertex t.
-    assert(!m_vovd[t]);
+    assert(!base::operator[](t));
     // Set the value.
-    m_vovd[t] = std::forward<T>(l);
+    base::operator[](t) = std::forward<T>(l);
 
-    return *m_vovd[t];
-  }
-
-  // This is a const member, because we allow the random access, but
-  // disallow the modification of the element.
-  const vd_t &
-  operator[](size_type i) const
-  {
-    return m_vovd[i];
+    return *base::operator[](t);
   }
 };
 
