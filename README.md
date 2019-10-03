@@ -1,17 +1,15 @@
 # The GD software
 
-Implementation of the generic Dijkstra algorithm, which was proposed
-in:
+This software is a simulator that evaluates the generic Dijkstra
+algorithm and the competing algorithms.  This simulator produced the
+results published in:
 
 Ireneusz Szcześniak, Andrzej Jajszczyk, Bożena Woźna-Szcześniak,
-"Generic Dijkstra for Optical Networks", Journal of Optical
+"Generic Dijkstra for optical networks", Journal of Optical
 Communications and Networking, vol. 11, issue 11, pp. 568-577,
 November 2019
 
 <https://doi.org/10.1364/JOCN.11.000568>
-
-This repository has far more than just the algoritm implementation.
-It's the whole simulator with the competing algorithms implemented.
 
 ## Download
 
@@ -25,8 +23,8 @@ Or you can use git:
 
 ## A minimal project
 
-If you want to get a minimal example with the algorithm
-implementation, please go to:
+If you want to get a minimal example with the generic Dijkstra
+algorithm implementation, please go to:
 
 <www.irkos.org/gde>
 
