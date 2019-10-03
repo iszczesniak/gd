@@ -26,7 +26,7 @@ Or you can use git:
 If you want to get a minimal example with the generic Dijkstra
 algorithm implementation, please go to:
 
-<www.irkos.org/gde>
+<http://www.irkos.org/gde>
 
 ## Author, Affiliation and License
 
