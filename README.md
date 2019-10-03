@@ -1,6 +1,7 @@
 # The GD software
 
-Implementation of the generic Dijkstra algorithm, which was proposed in:
+Implementation of the generic Dijkstra algorithm, which was proposed
+in:
 
 Ireneusz Szcześniak, Andrzej Jajszczyk, Bożena Woźna-Szcześniak,
 "Generic Dijkstra for Optical Networks", Journal of Optical
@@ -25,7 +26,9 @@ Or you can use git:
 ## A minimal project
 
 If you want to get a minimal example with the algorithm
-implementation, [please click here](../gde).
+implementation, please go to:
+
+<www.irkos.org/gde>
 
 ## Author, Affiliation and License
 
