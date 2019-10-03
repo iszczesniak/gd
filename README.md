@@ -3,10 +3,11 @@
 Implementation of the generic Dijkstra algorithm, which was proposed in:
 
 Ireneusz Szcześniak, Andrzej Jajszczyk, Bożena Woźna-Szcześniak,
-"Generic Dijkstra for Optical Networks", submitted for publication,
-October 10, 2018.
+"Generic Dijkstra for Optical Networks", Journal of Optical
+Communications and Networking, vol. 11, issue 11, pp. 568-577,
+November 2019
 
-The link to the article: <https://arxiv.org/abs/1810.04481>
+<https://doi.org/10.1364/JOCN.11.000568>
 
 This repository has far more than just the algoritm implementation.
 It's the whole simulator with the competing algorithms implemented.
