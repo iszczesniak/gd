@@ -81,8 +81,7 @@ routing::set_up(graph &g, const demand &d, const CU &cu)
 
       if (!(!dr && !ar ||
             dr.value().first.count() == ar.value().first.count() &&
-            get_path_cost(g, dr.value().second) ==
-            get_path_cost(g, ar.value().second)))
+            get_cost(g, dr.value()) == get_cost(g, ar.value())))
         {
           cout << "dr = " << dr.value() << endl
                << "ar = " << ar.value() << endl;
@@ -336,6 +335,20 @@ routing::search_dijkstra(const graph &g, const demand &d,
   // Get the path.
   auto op = trace(P, dst, l, t);
 
+  if (op)
+    {
+      // The length of the path found.
+      auto dist = get_path_length(g, op.value().second);
+      // The path CU.
+      auto &pcu = op.value().first;
+
+      // Get the number of units required.
+      int units = adaptive_units<COST>::units(ncu, dist);
+
+      // First-fit spectrum allocation policy.
+      pcu = CU(pcu.min(), pcu.min() + units);
+    }
+
   // Make sure that all the results in S and Q are consistent.
   assert(is_consistent(P));
   assert(is_consistent(T));
@@ -417,8 +430,8 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
           auto op = trace(P, dst, l, t);
 
           if (op && (!result ||
-                     get_path_cost(g, op.value()) <
-                     get_path_cost(g, result.value().second)))
+                     get_path_length(g, op.value()) <
+                     get_path_length(g, result.value().second)))
             result = cupath(cu, op.value());
 
           if (max_cae < acc.m_max)
@@ -622,8 +635,8 @@ routing::search_puyenksp(const graph &g, const demand &d, const CU &cu)
       // This is the k shortest path.
       const kr_type &r = A.back();
 
-      // The cost of the path.
-      COST c = get_path_cost(g, r.second);
+      // The length of the path.
+      COST c = get_path_length(g, r.second);
 
       // This is the path SU.
       SU psu = find_path_su(g, r.second);
@@ -774,14 +787,14 @@ routing::select_first(const CU &cu, int ncu)
 CU
 routing::select_fittest(const CU &cu, int ncu)
 {
-  assert(false);
+  abort();
   return CU();
 }
 
 CU
 routing::select_random(const CU &cu, int ncu)
 {
-  assert(false);
+  abort();
   return CU();
 }
 

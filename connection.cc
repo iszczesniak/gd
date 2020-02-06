@@ -37,7 +37,7 @@ int
 connection::get_len() const
 {
   assert(is_established());
-  return get_path_cost(m_g, m_p.value().second);
+  return get_path_length(m_g, m_p.value().second);
 }
 
 int
