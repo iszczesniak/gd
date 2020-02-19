@@ -9,7 +9,8 @@ traffic.o
 # CXXFLAGS := $(CXXFLAGS) -O3
 CXXFLAGS := $(CXXFLAGS) -O3 -D NDEBUG
 
-CXXFLAGS := $(CXXFLAGS) -std=c++17
+CXXFLAGS := $(CXXFLAGS) -std=c++2a
+CXXFLAGS := $(CXXFLAGS) -fconcepts
 CXXFLAGS := $(CXXFLAGS) -I .
 CXXFLAGS := $(CXXFLAGS) -I des
 CXXFLAGS := $(CXXFLAGS) -I dijkstra
