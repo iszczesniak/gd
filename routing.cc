@@ -10,7 +10,7 @@
 #include "adaptive_units.hpp"
 #include "custom_dijkstra_call.hpp"
 #include "generic_dijkstra.hpp"
-#include "generic_label_creator.hpp"
+#include "generic_constrained_label_creator.hpp"
 #include "generic_label.hpp"
 #include "generic_permanent.hpp"
 #include "generic_tentative.hpp"
@@ -224,13 +224,14 @@ is_optimal(const graph &g, vertex src, vertex dst, int ncu,
       ten_type FGT(boost::num_vertices(fg));
 
       // The label we start the search with.
-      standard_label<fg_type, COST> fgl(0, edge(), src);
+      using label = standard_label<fg_type, COST>;
+      label fgl(0, edge(), src);
       // The reach of that modulation.
       COST r = adaptive_units<COST>::reach(ncu, fg_units.count());
       // The object that creates labels.
       standard_constrained_label_creator<fg_type, COST> fgc(fg, r);
       // Build the complete SPT.
-      dijkstra(fg, FGP, FGT, fgl, fgc, graph::null_vertex());
+      dijkstra(fg, fgl, FGP, FGT, fgc, EmptyCallable<label>{});
 
       // -------------------------------------------------------------
       // We're sure that in FGP (the standard Dijkstra solution) there
@@ -327,9 +328,11 @@ routing::search_dijkstra(const graph &g, const demand &d,
   // The label we start the search with.
   generic_label<graph, COST, CU> l(0, CU(cu), edge(), src);
   // The creator of the labels.
-  generic_label_creator<graph, COST, CU> c(g, ncu);
+  generic_constrained_label_creator<graph, COST, CU> c(g, ncu);
+
   // Run the search.
-  dijkstra(g, P, T, l, c, dst);
+  dijkstra(g, l, P, T, c, dst);
+
   // The tracer.
   generic_tracer<graph, cupath, acc_per_type, CU> t(g, ncu);
   // Get the path.
@@ -424,7 +427,7 @@ routing::search_parallel(const graph &g, const demand &d, const CU &cu)
           // The object that creates labels.
           standard_constrained_label_creator<fg_type, COST> c(fg, r);
           // Start the search.
-          dijkstra(fg, P, T, l, c, dst);
+          dijkstra(fg, l, P, T, c, dst);
           // The standard tracer.
           standard_tracer<fg_type, acc_per_type, path> t(fg);
           auto op = trace(P, dst, l, t);
