@@ -10,3 +10,6 @@
 [submodule "dijkstra"]
 	path = dijkstra
 	url = https://github.com/iszczesniak/dijkstra
+[submodule "units"]
+	path = units
+	url = https://github.com/iszczesniak/units
