@@ -16,6 +16,7 @@ CXXFLAGS := $(CXXFLAGS) -I des
 CXXFLAGS := $(CXXFLAGS) -I dijkstra
 CXXFLAGS := $(CXXFLAGS) -I generic_dijkstra
 CXXFLAGS := $(CXXFLAGS) -I standard_dijkstra
+CXXFLAGS := $(CXXFLAGS) -I units
 
 # Use the C++ linker
 LINK.o = $(LINK.cc)
