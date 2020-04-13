@@ -1,9 +1,7 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include "generic_label.hpp"
 #include "graph.hpp"
-#include "standard_label.hpp"
 #include "units.hpp"
 
 #include <boost/graph/connected_components.hpp>
